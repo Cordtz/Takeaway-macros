@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F6F4EF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Macros">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Takeaway Macros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F4EF; --card:#FFFFFF; --ink:#1C1B19; --muted:#6F6B63; --line:#E7E3DA;
+  --green:#2F8F5B; --green-bg:#E3F3EA; --amber:#B9730A; --amber-bg:#FBF0DC; --red:#C2410C; --red-bg:#FCE8DD;
+  --p:#3B82C4; --c:#E3A43B; --f:#D2604B; --na:#7A6FB0; --fib:#4E9A6B;
+  --nav-h:64px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 16px)}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 14px) 16px 8px}
+.title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px}
+h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.02em}
+.sub{font-size:13px;color:var(--muted);margin-top:2px}
+.search-row{display:flex;gap:8px}
+.search{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 12px;height:44px}
+.search input{flex:1;border:0;outline:0;font:inherit;font-size:16px;background:none;min-width:0}
+.filter-btn{position:relative;width:44px;height:44px;border-radius:14px;background:var(--ink);color:#fff;display:grid;place-items:center;flex:none}
+.filter-btn .dot{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#7EE2A8;display:none}
+.filter-btn.on .dot{display:block}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 4px;margin:0 -16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{padding:4px 16px}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin:6px 2px 10px}
+.meta select{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:var(--ink)}
+.list{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;cursor:pointer}
+.badge{flex:none;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;line-height:1}
+.card-body{flex:1;min-width:0}
+.card-top{display:flex;justify-content:space-between;gap:8px}
+.name{font-weight:700;font-size:15px;line-height:1.25}
+.chain{font-size:12px;color:var(--muted);margin-top:2px}
+.heart{flex:none;width:36px;height:36px;margin:-6px -6px 0 0;display:grid;place-items:center;border-radius:50%}
+.heart svg{width:20px;height:20px}
+.heart.on svg{fill:#E0475B;stroke:#E0475B}
+.row2{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.pill{font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:999px;white-space:nowrap}
+.pill.g{background:var(--green-bg);color:var(--green)}
+.pill.a{background:var(--amber-bg);color:var(--amber)}
+.pill.r{background:var(--red-bg);color:var(--red)}
+.src{font-size:10.5px;font-weight:700;padding:3px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.src.o{border-color:#BFE1CC;color:var(--green)}
+.kcal{font-size:13px;font-weight:700}
+.kcal span{color:var(--muted);font-weight:500}
+.macros{display:flex;gap:10px;margin-top:8px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.macros b{color:var(--ink);font-weight:700}
+.m-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
+.bar{display:flex;height:6px;border-radius:999px;overflow:hidden;margin-top:8px;background:var(--line)}
+.bar i{display:block;height:100%}
+.empty{text-align:center;color:var(--muted);padding:48px 20px;line-height:1.5}
+.empty .big{font-size:40px;margin-bottom:8px}
+.section-h{font-size:17px;font-weight:800;margin:18px 2px 4px}
+.section-p{font-size:13px;color:var(--muted);margin:0 2px 10px;line-height:1.5}
+
+/* chain grid */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12.5px;font-weight:700;text-align:center;line-height:1.2}
+.tile .badge{width:48px;height:48px;font-size:26px;border-radius:14px}
+.at-head{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 14px;margin-top:6px}
+.at-head .grow{flex:1}
+.at-head b{font-size:17px}
+.link-btn{font-size:13px;font-weight:700;color:var(--ink);padding:8px 10px;border-radius:10px;background:var(--bg)}
+
+/* summary card */
+.sum{background:var(--ink);color:#fff;border-radius:20px;padding:16px;margin-top:8px}
+.sum .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.sum .big{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.sum .unit{font-size:13px;opacity:.7;margin-top:4px}
+.sum .pill{background:rgba(255,255,255,.14);color:#fff}
+.sum .pill.g{background:#7EE2A8;color:#0f3d24}
+.sum .pill.a{background:#F7CF7F;color:#4a2f00}
+.sum .pill.r{background:#F5A383;color:#4a1500}
+.sum-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px}
+.sum-grid div{background:rgba(255,255,255,.08);border-radius:12px;padding:8px 4px;text-align:center;font-size:11px;opacity:.95}
+.sum-grid b{display:block;font-size:15px;margin-bottom:2px}
+.meter{margin-top:12px;font-size:12px;opacity:.9}
+.meter .track{height:6px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden;margin-top:4px}
+.meter .track i{display:block;height:100%;border-radius:4px}
+.line{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.line .badge{width:36px;height:36px;font-size:18px;border-radius:10px}
+.line .grow{flex:1;min-width:0}
+.line .nm{font-weight:700;font-size:14px}
+.line .tw{font-size:12px;color:var(--green);margin-top:2px}
+.line .cl{font-weight:700;font-size:13px;white-space:nowrap}
+.x{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--bg);color:var(--muted);flex:none}
+
+/* nav */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.nav-inner{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--nav-h)}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10.5px;font-weight:600;color:var(--muted);position:relative}
+.nav-btn svg{width:24px;height:24px}
+.nav-btn.active{color:var(--ink)}
+.nav-btn.active::before{content:"";position:absolute;top:0;width:28px;height:3px;border-radius:0 0 3px 3px;background:var(--ink)}
+.nav-count{position:absolute;top:7px;left:calc(50% + 5px);background:#E0475B;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:none;place-items:center;padding:0 4px}
+.nav-count.green{background:var(--green)}
+
+/* sheets */
+.scrim{position:fixed;inset:0;background:rgba(20,18,15,.4);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;max-width:560px;margin:0 auto;background:var(--card);border-radius:24px 24px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s ease;max-height:90vh;overflow-y:auto}
+.sheet.show{transform:none}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 14px}
+.sheet h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+.f-group{margin:18px 0}
+.f-label{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between}
+.f-label span{color:var(--muted);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg .chip{min-height:34px}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;cursor:pointer}
+.toggle-row small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.sw-t{width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.sw-t::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .15s}
+.sw-t.on{background:var(--green)}
+.sw-t.on::after{transform:translateX(18px)}
+.sheet-actions{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;min-height:48px;border-radius:14px;font-weight:700;font-size:15px;padding:0 14px}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.light{background:var(--bg);border:1px solid var(--line)}
+.btn.green{background:var(--green);color:#fff}
+
+/* detail */
+.d-head{display:flex;gap:12px;align-items:center}
+.d-kcal{display:flex;align-items:baseline;gap:6px;margin:16px 0 6px;flex-wrap:wrap}
+.d-kcal b{font-size:40px;font-weight:800;letter-spacing:-.03em}
+.d-kcal span{color:var(--muted);font-size:14px}
+.ring-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.ring{background:var(--bg);border-radius:16px;padding:12px 8px;text-align:center}
+.ring svg{width:60px;height:60px}
+.ring .v{font-weight:800;font-size:17px;margin-top:4px}
+.ring .l{font-size:12px;color:var(--muted)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.stat{background:var(--bg);border-radius:14px;padding:10px 12px;font-size:12px;color:var(--muted)}
+.stat b{display:block;color:var(--ink);font-size:16px;margin-top:2px}
+.why{background:var(--bg);border-radius:16px;padding:14px;font-size:14px;line-height:1.5;margin-top:10px}
+.why h3{font-size:12px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tw-chip{min-height:36px;padding:0 12px;border-radius:999px;border:1px dashed #C9C3B6;background:var(--card);font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin:0 6px 6px 0}
+.tw-chip.on{border-style:solid;border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.delta{font-size:12px;color:var(--muted);font-weight:600}
+.about p, .about li{font-size:14px;line-height:1.6;color:#3a3833}
+.about ol{padding-left:20px}
+.legend-row{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px;line-height:1.45}
+.disclaimer{font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:16px;line-height:1.5}
+.src-list{font-size:13px;line-height:1.5;margin:0;padding:0;list-style:none}
+.src-list li{padding:8px 0;border-bottom:1px solid var(--line)}
+.src-list a{color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px);transform:translate(-50%,20px);background:var(--ink);color:#fff;font-size:14px;font-weight:600;padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:all .2s;z-index:30;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title-row">
+      <div>
+        <h1 id="pageTitle">Takeaway Macros</h1>
+        <div class="sub" id="pageSub">Find the healthier order, fast</div>
+      </div>
+    </div>
+    <div class="search-row" id="searchRow">
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6F6B63" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search menu items" autocomplete="off">
+      </label>
+      <button class="filter-btn" id="filterBtn" aria-label="Filters">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        <span class="dot"></span>
+      </button>
+    </div>
+    <div class="chips" id="chainChips"></div>
+  </header>
+  <main id="main"></main>
+</div>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" data-tab="at">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>I'm at…
+    </button>
+    <button class="nav-btn" data-tab="browse">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18M5 11a7 7 0 0 1 14 0"/><path d="M4 15h16l-1.5 4h-13z"/></svg>Browse
+    </button>
+    <button class="nav-btn" data-tab="meal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16l-1.5 12a2 2 0 0 1-2 1.8h-9a2 2 0 0 1-2-1.8z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>Meal<span class="nav-count green" id="mealCount"></span>
+    </button>
+    <button class="nav-btn" data-tab="favs">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Favourites<span class="nav-count" id="favCount"></span>
+    </button>
+    <button class="nav-btn" data-tab="about">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>Guide
+    </button>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+
+<div class="sheet" id="filterSheet" role="dialog" aria-label="Filters">
+  <div class="grab"></div>
+  <h2>Filters</h2>
+  <div class="f-group"><div class="f-label">Health rating</div><div class="seg" id="fRating"></div></div>
+  <div class="f-group"><div class="f-label">Type</div><div class="seg" id="fType"></div></div>
+  <div class="f-group"><div class="f-label">Max calories <span id="calOut"></span></div><input type="range" id="fCal" min="100" max="1100" step="50"></div>
+  <div class="f-group"><div class="f-label">Min protein <span id="proOut"></span></div><input type="range" id="fPro" min="0" max="60" step="5"></div>
+  <div class="f-group"><div class="f-label">Max sodium <span id="naOut"></span></div><input type="range" id="fNa" min="200" max="2600" step="100"></div>
+  <div class="f-group">
+    <div class="toggle-row" data-toggle="lowCarb"><div>Low carb<small>Under 20 g carbs</small></div><div class="sw-t"></div></div>
+    <div class="toggle-row" data-toggle="lowFat"><div>Lower fat<small>Under 15 g fat</small></div><div class="sw-t"></div></div>
+    <div class="toggle-row" data-toggle="hiFib"><div>Good fibre<small>4 g or more</small></div><div class="sw-t"></div></div>
+    <div class="toggle-row" data-toggle="veg"><div>Vegetarian<small>No meat</small></div><div class="sw-t"></div></div>
+    <div class="toggle-row" data-toggle="checked"><div>Checked figures only<small>Official or database sources</small></div><div class="sw-t"></div></div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn light" id="resetF">Reset</button>
+    <button class="btn dark" id="applyF">Show results</button>
+  </div>
+</div>
+
+<div class="sheet" id="detailSheet" role="dialog" aria-label="Item details"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ================= DATA =================
+const CHAINS = {
+  subway:  {name:"Subway",         icon:"🥖", color:"#DCEFE2"},
+  nandos:  {name:"Nando's",        icon:"🌶️", color:"#F8DCD8"},
+  mcd:     {name:"McDonald's",     icon:"🍟", color:"#FBEBC4"},
+  gyg:     {name:"Guzman y Gomez", icon:"🌮", color:"#E8DDF3"},
+  grilld:  {name:"Grill'd",        icon:"🍔", color:"#DDE9D3"},
+  zamb:    {name:"Zambrero",       icon:"🌯", color:"#F6E2CF"},
+  rolld:   {name:"Roll'd",         icon:"🥢", color:"#E1EEDB"},
+  fishbowl:{name:"Fishbowl",       icon:"🥗", color:"#D8ECEE"},
+  soul:    {name:"Soul Origin",    icon:"🥙", color:"#EFE6D6"},
+  noodle:  {name:"Noodle Box",     icon:"🍜", color:"#F7E0D2"},
+  oporto:  {name:"Oporto",         icon:"🐔", color:"#FADBD3"},
+  hj:      {name:"Hungry Jack's",  icon:"👑", color:"#F7E3CE"},
+  kfc:     {name:"KFC",            icon:"🍗", color:"#F5D9DB"},
+  rooster: {name:"Red Rooster",    icon:"🐓", color:"#F9DCDC"},
+  schnitz: {name:"Schnitz",        icon:"🍋", color:"#FAF0C8"},
+  dominos: {name:"Domino's",       icon:"🍕", color:"#D9E4F2"},
+  pizzahut:{name:"Pizza Hut",      icon:"🧀", color:"#F4DED6"},
+  bettys:  {name:"Betty's Burgers",icon:"🍦", color:"#E3EEF5"},
+  boost:   {name:"Boost Juice",    icon:"🥤", color:"#F3E1EE"},
+  starbucks:{name:"Starbucks",     icon:"☕", color:"#DCEBE3"},
+  zarraffas:{name:"Zarraffa's Coffee",icon:"🧊", color:"#E2E8F4"},
+  gongcha: {name:"Gong Cha",       icon:"🧋", color:"#F1E6DA"},
+  cafe63:  {name:"Cafe 63",        icon:"🍳", color:"#FBEFD9"},
+  rashays: {name:"Rashays",        icon:"🥩", color:"#EADFD7"},
+};
+const CAFE = new Set(["boost","starbucks","zarraffas","gongcha","cafe63"]);
+
+// Where the figures come from (shown in the Guide)
+const SOURCES = {
+  subway:  ["o","Subway Australia Nutrition Guide (May 2026)","https://www.subway.com/-/media/Australia/Documents/Nutritionals/Nutrition/AUS-Nutritional-Web-Guide-May-2026.pdf"],
+  nandos:  ["o","Nando's Australia menu pages (whole chicken, tenders); FatSecret AU for Nandoca's Choice","https://www.nandos.com.au/menu-item/tenders"],
+  gyg:     ["o","Guzman y Gomez nutrition PDF (figures dated Jan 2020 — newer recipes may differ)","https://www.guzmanygomez.com/wp-content/uploads/2024/07/240429_U-NUTRITIONALINFO_Apr2024.pdf"],
+  zamb:    ["o","Zambrero Nutritional Information AUS (April 2026, no sauce; fibre not published)","https://dph95f73vdxmz.cloudfront.net/uploads/ops/resources/Zambrero-Nutritional-AUS-APRIL-2026.pdf"],
+  grilld:  ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/grilld/simply-grilld/1-burger"],
+  hj:      ["d","FatSecret Australia listings; Hungry Jack's 2019 guide for Rebel Whopper","https://www.fatsecret.com.au/calories-nutrition/hungry-jacks"],
+  kfc:     ["d","FatSecret / CalorieKing Australia listings","https://www.fatsecret.com.au/calories-nutrition/search?q=KFC"],
+  oporto:  ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/oporto/regular-chips/1-serving"],
+  rooster: ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/red-rooster/classic-roast/1-serving"],
+  rolld:   ["o","Roll'd product pages and FatSecret Australia","https://rolld.com.au/products/tofu-rice-paper-roll"],
+  mcd:     ["d","FatSecret Australia (Big Mac matches McDonald's AU core menu, June 2024); a few items estimated","https://www.fatsecret.com.au/calories-nutrition/mcdonalds"],
+  fishbowl:["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/search?q=fishbowl"],
+  soul:    ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/soul-origin/falafel-wrap/1-serving"],
+  noodle:  ["e","Calories from CalorieCounter Australia; protein, carbs and fat estimated","https://www.caloriecounter.com.au/?p=639075"],
+  schnitz: ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/schnitz/schnitz-stick/1-serving"],
+  dominos: ["d","CalorieKing / FatSecret Australia (per-slice figures doubled)","https://www.calorieking.com/au/en/foods/f/calories-in-pizza-premium-peri-peri-chicken-pizza-classic-crust-base/zmJfh-mXRRuMcHK8HMpnlQ"],
+  pizzahut:["d","FatSecret / CalorieCounter Australia","https://m.fatsecret.com.au/calories-nutrition/pizza-hut/hawaiian-pizza-large/1-slice"],
+  boost:   ["d","FatSecret Australia listings (Original 610 mL size)","https://mobile.fatsecret.com.au/calories-nutrition/boost-juice/veggie-garden-juice-(original)/1-serving"],
+  starbucks:["d","FatSecret Australia listings (some carbs worked out from calories)","https://mobile.fatsecret.com.au/calories-nutrition/starbucks/caramel-macchiato-(small)/1-serving"],
+  zarraffas:["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/zarraffas/caffe-mocha-(masai)/1-serving"],
+  gongcha: ["e","Energy (kJ) from Gong Cha Australia's menu on DoorDash; protein, carbs and fat estimated","https://www.doordash.com/business/gong-cha-892130/menu"],
+  cafe63:  ["e","No published nutrition info — all figures are estimates from typical portions",null],
+  rashays: ["e","No published nutrition info — all figures are estimates from typical portions",null],
+  bettys:  ["o","Betty's Burgers Nutritional Information (Oct 2022)","https://www.bettysburgers.com.au/bucket/2022/10/BB_Nutritional_Information_OCT22.pdf"],
+};
+const SRC_LABEL = {o:"Official", d:"Database", e:"Estimate"};
+
+// Tweaks: delta [cal, protein, carbs, fat, fibre, sodium]
+const TWEAKS = {
+  ch:{l:"No cheese",            d:[-60,-4,0,-5,0,-200]},
+  my:{l:"No mayo / creamy sauce",d:[-90,0,-1,-10,0,-120]},
+  nb:{l:"Lettuce wrap, no bun", d:[-160,-6,-30,-2,-1.5,-300]},
+  bw:{l:"Make it a bowl",       d:[-290,-8,-48,-8,-2,-550]},
+  nr:{l:"Salad instead of rice",d:[-180,-4,-38,-1,1,-40]},
+  sk:{l:"Skin off",             d:[-80,-3,0,-8,0,-150]},
+  dm:{l:"Double meat",          d:[130,22,1,4,0,400]},
+  av:{l:"Add avocado",          d:[80,1,1,8,2,0]},
+  xs:{l:"Extra salad",          d:[15,1,2,0,1.5,10]},
+  tc:{l:"Thin crust",           d:[-80,-3,-14,-1,-1,-150]},
+  sm:{l:"Skim milk",            d:[-50,1,1,-6,0,10]},
+  hs:{l:"Half sugar",           fn:m=>{const dc=m.c*0.4; return [-Math.round(dc*4),0,-dc,0,0,0];}},
+  np:{l:"No pearls",            d:[-100,0,-25,0,0,-10]},
+  sf:{l:"Salad instead of chips",d:[-250,-3,-35,-12,2,-300]},
+  sh:{l:"Sauce on the side (use half)",d:[-80,0,-2,-8,0,-200]},
+};
+
+// [id, chain, name, type, cal, protein, carbs, fat, fibre|null, sodium|null, veg, src, tweaks, tip]
+const RAW = [
+ // Subway — official May 2026 (6-inch, standard build incl. listed cheese/sauce)
+ ["sw1","subway","Veggie Delite with Avo (6-inch)","Main",377,16.1,44.5,14.7,8.1,480,1,"o",["ch","my","xs"],"Already a strong pick — the avo adds healthy fats and fibre."],
+ ["sw2","subway","Turkey on Rye (6-inch)","Main",394,23.9,47.7,10.7,5.9,869,0,"o",["ch","my","dm","av","xs"],"Double the turkey for a high-protein lunch."],
+ ["sw3","subway","Honey Mustard Leg Ham (6-inch)","Main",391,21.4,48.0,11.4,5.6,1110,0,"o",["ch","my","xs"],"Ham is salty — balance it with extra salad."],
+ ["sw4","subway","Chicken Strips (6-inch)","Main",382,25.8,38.3,13.3,3.9,688,0,"o",["ch","my","dm","av","xs"],"One of the best all-rounders at Subway."],
+ ["sw5","subway","Sweet Onion Chicken Teriyaki (6-inch)","Main",396,25.3,54.5,8.0,3.2,822,0,"o",["ch","dm","xs"],"The sweet onion sauce adds sugar — ask for light."],
+ ["sw6","subway","Philly-Style Three-Cheese Steak (6-inch)","Main",516,29.4,41.5,24.6,3.3,1410,0,"o",["ch","my","xs"],"Three cheeses add up — drop the cheese to save ~60 cal."],
+ ["sw7","subway","Italian Meatball (6-inch)","Main",561,24.0,51.8,28.4,5.2,1190,0,"o",["ch","xs"],"Swap to Chicken Strips to save ~180 cal."],
+ ["sw8","subway","Chicken & Bacon Ranch (6-inch)","Main",466,28.9,39.1,21.0,3.1,953,0,"o",["ch","my","xs"],"Hold the ranch to cut fat."],
+ ["sw9","subway","Italian B.M.T. (6-inch)","Main",506,24.6,42.5,25.8,3.3,1420,0,"o",["ch","my","xs"],"Salami and pepperoni are high in fat and salt."],
+ ["sw10","subway","Chicken Strips Salad","Main",403,37.8,10.0,23.3,4.2,905,0,"o",["ch","my","av"],"Best low-carb, high-protein option here."],
+ ["sw11","subway","Sweet Onion Chicken Teriyaki Salad","Main",429,36.9,41.7,12.4,4.6,1240,0,"o",["ch"],"High protein, but the sauce adds sugar and salt."],
+ ["sw12","subway","Chicken & Bacon Ranch Salad","Main",568,44.3,10.9,38.6,4.3,1500,0,"o",["ch","my"],"A salad isn't automatically light — the dressing is heavy."],
+ ["sw13","subway","Chocolate Chip Cookie","Side",223,2.3,29.4,10.7,1.0,137,1,"o",[],"A small treat — share it or skip it."],
+ ["sw14","subway","Mango Smoothie","Drink",180,1.6,44.8,0.8,3.2,2,1,"o",[],"Fruit-based but still ~45 g carbs."],
+
+ // Nando's — ¼ / ½ derived from official whole-chicken figures
+ ["na1","nandos","¼ PERi-PERi Chicken","Main",357,54,0.6,15.4,0,1005,0,"o",["sk"],"Huge protein for the calories. Pair with corn or salad. (¼ of Nando's official whole-chicken figures.)"],
+ ["na2","nandos","½ PERi-PERi Chicken","Main",714,108,1.2,30.9,0,2010,0,"o",["sk"],"Share it, or pair with salad only."],
+ ["na3","nandos","4 PERi-PERi Tenders","Main",220,39.6,0.7,6.5,0,949,0,"o",[],"Best protein-per-calorie pick in the whole app."],
+ ["na4","nandos","Nandoca's Choice","Main",649,42.5,45.6,31.6,null,1260,0,"d",["my"],"Garlic bread + slaw make this a heavy burger."],
+ ["na5","nandos","PERinaise Classic (chicken, bun)","Main",496,41,45,16,3,1100,0,"e",["my","nb"],"Hold the PERinaise to save ~80 cal."],
+ ["na6","nandos","Mediterranean Salad + Chicken","Main",420,42,15,20,4,1100,0,"e",["my"],"Ask for dressing on the side."],
+ ["na7","nandos","Corn on the Cob (reg)","Side",150,5,25,3,3,200,1,"e",[],"Best side for fibre without the fat."],
+ ["na8","nandos","Mixed Leaf Salad (reg)","Side",60,2,5,3,2,150,1,"e",[],"Lightest side on the menu."],
+ ["na9","nandos","Spicy Rice (reg)","Side",280,6,54,5,2,600,1,"e",[],"Fine carb side after training."],
+ ["na10","nandos","PERi-PERi Chips (reg)","Side",480,7,60,23,5,700,1,"e",[],"Swap for corn to save ~330 cal."],
+ ["na11","nandos","Coleslaw (reg)","Side",220,2,10,19,2,250,1,"e",[],"Mostly fat from the dressing."],
+
+ // Guzman y Gomez — official (Mild)
+ ["gy1","gyg","Grilled Chicken Salad","Main",300,27,8,18,3,710,0,"o",["av"],"Best low-carb pick at GYG (no chipotle mayo)."],
+ ["gy2","gyg","Grilled Chicken Bowl","Main",660,42,78,23,6,1610,0,"o",["nr","ch","dm"],"Swap the rice for salad to save ~180 cal."],
+ ["gy3","gyg","Mini Grilled Chicken Burrito","Main",440,24,55,15,4,1110,0,"o",["ch"],"Good portion-controlled option."],
+ ["gy4","gyg","Grilled Chicken Soft Taco (1)","Main",170,15,16,5,1,510,0,"o",[],"Two tacos make a light, balanced meal."],
+ ["gy5","gyg","Grilled Chicken Burrito","Main",760,46,96,25,7,1970,0,"o",["bw","ch"],"Big and salty — a bowl drops the tortilla."],
+ ["gy6","gyg","Slow-cooked Beef Burrito","Main",830,37,96,37,7,2000,0,"o",["bw","ch"],"Chicken has less fat."],
+ ["gy7","gyg","Pulled Pork Burrito","Main",740,39,98,24,7,2280,0,"o",["bw","ch"],"Highest sodium burrito here."],
+ ["gy8","gyg","Sautéed Veg & Guac Burrito","Main",770,24,106,32,13,1900,1,"o",["bw","ch"],"Lots of fibre, but calorie-dense."],
+ ["gy9","gyg","Grilled Chicken Nachos","Main",1060,51,87,62,13,1720,0,"o",["ch"],"Biggest meal in the app — definitely share."],
+ ["gy10","gyg","Chicken Chorizo Breakfast Burrito","Breakfast",480,25,40,25,2,1230,0,"o",[],"Lighter than the bacon version."],
+ ["gy11","gyg","Bacon Breakfast Burrito","Breakfast",620,29,39,39,1,1810,0,"o",[],"High fat and sodium."],
+ ["gy12","gyg","Corn Chips & Guacamole","Side",690,9,69,45,11,640,1,"o",[],"Easy to overeat — share it."],
+
+ // Zambrero — official April 2026 (no sauce)
+ ["za1","zamb","Classic Bowl — Grilled Chicken","Main",492,28.0,46.5,21.1,null,1303,0,"o",["nr","ch","dm"],"Good base — salad instead of rice makes it lighter."],
+ ["za2","zamb","Nourish+ Bowl — Grilled Chicken","Main",509,27.5,48.4,21.5,null,1596,0,"o",["ch","dm"],"Similar to the Classic Bowl, a bit saltier."],
+ ["za3","zamb","Quesadilla — Grilled Chicken","Main",538,32.9,42.8,25.5,null,1431,0,"o",["ch"],"Cheesy — good protein, moderate fat."],
+ ["za4","zamb","Classic Bowl — Vegetarian","Main",638,16.4,76.4,28.9,null,1217,1,"o",["nr","ch"],"Add extra beans for more protein."],
+ ["za5","zamb","Classic Burrito — Grilled Chicken","Main",774,35.5,90.1,29.7,null,1838,0,"o",["bw","ch"],"Switch to a bowl to drop the tortilla."],
+ ["za6","zamb","Nachos — Grilled Chicken","Main",784,35.9,50.0,48.8,null,1586,0,"o",["ch"],"Definitely one to share."],
+ ["za7","zamb","Classic Burrito — Barbacoa Beef","Main",803,37.2,92.6,31.0,null,1846,0,"o",["bw","ch"],"Chicken is slightly lighter."],
+
+ // Grill'd — FatSecret AU
+ ["gr1","grilld","Bird & Brie (no bun)","Main",371,40.3,12.3,20.2,null,null,0,"d",["ch","my"],"Top high-protein, low-carb burger."],
+ ["gr2","grilld","Dynamic Chicken (panini bun)","Main",533,46.2,39,20.4,null,null,0,"d",["nb","my"],"Big protein — go no bun to make it a healthy pick."],
+ ["gr3","grilld","Bird & Brie (panini bun)","Main",538,45.7,34.3,24.9,null,null,0,"d",["nb","ch","my"],"Ask for no bun to save ~170 cal."],
+ ["gr4","grilld","Simply Grill'd (no bun)","Main",440,22.8,9,28.4,null,null,0,"d",["ch","my"],"Low carb, but beef + mayo keep the fat up."],
+ ["gr5","grilld","Simply Grill'd (traditional bun)","Main",600,29.2,36.0,30.5,null,null,0,"d",["nb","ch","my"],"Hold the mayo to save ~90 cal."],
+ ["gr6","grilld","Garden Goodness (no bun)","Main",335,7.9,28.9,20.1,null,null,1,"d",["ch","my"],"Light, but low in protein."],
+ ["gr7","grilld","Garden Goodness (panini bun)","Main",493,14.1,57.4,21.7,null,null,1,"d",["nb","ch","my"],"Try it bun-free to lighten it."],
+ ["gr8","grilld","Snack Slider","Main",268,19.1,21.6,11.1,null,561,0,"d",[],"Great small option — add a side salad."],
+ ["gr9","grilld","Famous Grill'd Chips","Side",335,2.4,39.8,15.8,null,null,1,"d",[],"Share them, or swap for a side salad."],
+
+ // Roll'd
+ ["ro1","rolld","Tofu Rice Paper Roll (1)","Main",161,4.6,25.4,4.1,null,null,1,"o",[],"Light — 2–3 rolls make a meal."],
+ ["ro2","rolld","Lemongrass Beef Rice Paper Roll (1)","Main",173,8.5,25.3,3.9,0.6,246,0,"d",[],"Lean and fresh — have 2–3."],
+ ["ro3","rolld","Poached Chicken Rice Paper Roll (1)","Main",150,9,22,2.5,1,250,0,"e",[],"One of the leanest options anywhere."],
+ ["ro4","rolld","Chicken Pho (regular)","Main",420,30,55,7,2,1800,0,"e",[],"Lean, but the broth is very salty — leave some."],
+ ["ro5","rolld","Beef Pho (regular)","Main",460,30,55,11,2,1900,0,"e",[],"Warming and filling; watch the sodium."],
+ ["ro6","rolld","Lemongrass Chicken Bánh Mì","Main",520,28,65,15,4,1200,0,"e",["my"],"Lighter than most burgers or wraps."],
+ ["ro7","rolld","Chicken Vermicelli Noodle Salad","Main",480,28,65,11,4,900,0,"e",[],"Ask for dressing on the side."],
+ ["ro8","rolld","Vietnamese Iced Coffee","Drink",190,3,30,6,0,60,1,"e",[],"Condensed milk makes it sweet."],
+
+ // Oporto
+ ["op1","oporto","Grilled ¼ Chicken","Main",310,40,1,16,0,900,0,"e",["sk"],"Great protein; pair with a salad."],
+ ["op2","oporto","Chicken Salad Bowl","Main",450,35,30,20,5,1100,0,"e",["my"],"Ask for dressing on the side."],
+ ["op3","oporto","Vegan Bowl","Main",440,17,47.3,14.6,null,null,1,"d",[],"Good fibre-rich plant option."],
+ ["op4","oporto","Chicken & Cheese Burger","Main",460,26.3,57.2,22.9,null,null,0,"d",["ch","my"],"Hold the mayo to save ~90 cal."],
+ ["op5","oporto","5 Crispy Chicken Strips","Main",540,50.7,24.3,25.9,null,null,0,"d",[],"Lots of protein, but crumbed and fried."],
+ ["op6","oporto","Spicy Rice (single)","Side",230,4,41,4.7,null,null,1,"d",[],"Better than chips."],
+ ["op7","oporto","Portuguese Salad (single)","Side",90,2,6,6,2,200,1,"e",[],"Swap it for chips in any meal."],
+ ["op8","oporto","Regular Chips","Side",412,7.1,52.3,18.2,null,755,1,"d",[],"Go spicy rice or salad instead."],
+
+ // Hungry Jack's
+ ["hj1","hj","Grilled Chicken Classic","Main",350,30,35,10,2,850,0,"e",["my"],"Best protein pick at Hungry Jack's (macros estimated from 350 cal)."],
+ ["hj2","hj","Hamburger","Main",274,13.3,28.1,11.8,null,457,0,"d",[],"Simple and portion-friendly."],
+ ["hj3","hj","Whopper Jr","Main",331,15,30,17,2,550,0,"e",["my"],"Portion-friendly classic."],
+ ["hj4","hj","Cheeseburger","Main",321,16,28,15,1.5,700,0,"e",["ch"],"Pair with a side salad, not chips."],
+ ["hj5","hj","Nugget 6 Pack","Main",256,14.5,20.8,12.4,null,449,0,"d",[],"Watch the dipping sauce."],
+ ["hj6","hj","Whopper","Main",657,28.3,47.9,39.3,null,837,0,"d",["my"],"Hold the mayo to save ~90 cal."],
+ ["hj7","hj","Rebel Whopper (plant-based)","Main",674,28.3,58.0,36.3,null,1150,1,"o",["my"],"Plant-based isn't automatically lighter."],
+ ["hj8","hj","Chips (small)","Side",254,3,32,12,3,250,1,"e",[],"If you must, go small."],
+ ["hj9","hj","Chips (medium)","Side",308,4,39,15,3.5,300,1,"e",[],"Small saves ~55 cal."],
+ ["hj10","hj","Thickshake (medium)","Drink",450,11,70,13,0,250,1,"e",[],"Dessert in a cup."],
+
+ // KFC — FatSecret / CalorieKing AU
+ ["kf1","kfc","Original Recipe Chicken (1 piece)","Main",235,20.4,7.2,13.9,null,null,0,"d",["sk"],"Remove the skin to cut fat a lot."],
+ ["kf2","kfc","Original Tenders Crunch Bowl","Main",435,20.4,26.3,26.8,null,911,0,"d",["my"],"Dressing adds fat — ask for less."],
+ ["kf3","kfc","Zinger Burger","Main",452,27.1,34.3,22.3,null,null,0,"d",["my"],"One of the more balanced KFC options."],
+ ["kf4","kfc","Snack Popcorn Chicken","Main",241,11.8,14.8,15.0,null,null,0,"d",[],"Easy to overeat — stick to snack size."],
+ ["kf5","kfc","6 Nuggets","Main",316,16.2,27.1,15.8,null,null,0,"d",[],"Watch the dipping sauce."],
+ ["kf6","kfc","3 Original Tenders","Main",431,26.2,14.4,30.1,null,null,0,"d",[],"Higher fat than it looks."],
+ ["kf7","kfc","Regular Potato & Gravy","Side",64,1.9,12.0,0.9,null,null,0,"d",[],"Surprisingly light side."],
+ ["kf8","kfc","Regular Coleslaw","Side",140,1,14,9,2,200,1,"e",[],"Lighter than chips."],
+ ["kf9","kfc","Regular Chips","Side",283,4.4,40.6,11.5,null,null,1,"d",[],"Swap for potato & gravy to save ~220 cal."],
+
+ // Red Rooster
+ ["rr1","rooster","¼ Chicken (breast)","Main",330,40,1,18,0,900,0,"e",["sk"],"Remove skin to make it a healthy pick."],
+ ["rr2","rooster","Fried Chicken (1 piece)","Main",250,18.1,9.0,15.8,null,585,0,"d",[],"Roast is the leaner choice."],
+ ["rr3","rooster","Classic Roast (meal)","Main",509,41.9,44.9,14.0,null,2454,0,"d",["sk"],"Great protein, but very high sodium."],
+ ["rr4","rooster","Reds Burger","Main",610,25.1,42.6,37.8,null,1245,0,"d",["my"],"Hold the mayo."],
+ ["rr5","rooster","Rooster Roll","Main",610,28.6,64.3,25.1,null,null,0,"d",["my"],"Hold the mayo to save ~90 cal."],
+ ["rr6","rooster","Garden Salad","Side",50,2,5,2,2,80,1,"e",[],"Lightest side."],
+ ["rr7","rooster","Roast Potatoes (regular)","Side",230,4,32,9,3,400,1,"e",[],"Better than chips."],
+ ["rr8","rooster","Chips (regular)","Side",380,5,48,18,4,600,1,"e",[],"Roast potatoes save ~150 cal."],
+ // McDonald's — FatSecret AU (Big Mac matches McDonald's AU core menu, June 2024)
+ ["mc1","mcd","Bacon & Egg McMuffin","Breakfast",290,17.3,25.2,13.0,null,null,0,"d",["ch"],"One of the better breakfast options."],
+ ["mc2","mcd","Chicken McNuggets (6)","Main",216,12.1,12.4,13.0,null,383,0,"d",[],"Mind the dipping sauce — some add 50+ cal."],
+ ["mc3","mcd","Cheeseburger","Main",306,16.1,28.5,13.1,null,700,0,"d",["ch"],"Pair with water, not a full meal deal."],
+ ["mc4","mcd","Chicken McNuggets (10)","Main",360,20.2,20.7,21.7,null,638,0,"d",[],"The 6-pack is the lighter choice."],
+ ["mc5","mcd","Quarter Pounder","Main",534,31.3,37.1,28.5,null,1110,0,"d",["ch"],"More protein than a Big Mac for similar calories."],
+ ["mc6","mcd","Big Mac","Main",559,25.9,43.8,30.3,null,1090,0,"o",["ch","my"],"Hold the sauce to cut fat."],
+ ["mc7","mcd","McChicken","Main",435,17,42,22,2.5,850,0,"e",["my"],"Crumbed patty + mayo — not as light as it sounds (macros estimated from 435 cal)."],
+ ["mc8","mcd","Double Quarter Pounder","Main",760,47,37,45,2.5,1429,0,"e",["ch"],"Very high fat — a treat meal."],
+ ["mc9","mcd","Sausage & Egg McMuffin","Breakfast",374,21,26,21,1.5,900,0,"e",["ch"],"Bacon & Egg saves ~85 cal (macros estimated from 374 cal)."],
+ ["mc10","mcd","Hash Brown","Breakfast",143,1,15,9,1.5,300,1,"e",[],"Adds calories but little protein."],
+ ["mc11","mcd","Fries (small)","Side",219,3,28,10.5,2.5,170,1,"e",[],"If you must, go small (macros estimated from 219 cal)."],
+ ["mc12","mcd","Fries (medium)","Side",320,4,40,16,3.5,250,1,"e",[],"Small fries save ~100 cal."],
+ ["mc13","mcd","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+ ["mc14","mcd","Chocolate Shake (medium)","Drink",420,11,68,11,0,220,1,"e",[],"Dessert in a cup — a treat."],
+
+ // Fishbowl — FatSecret AU
+ ["fb1","fishbowl","Crispy Chicken Bowl (large)","Main",440,32.2,19.6,25.1,null,null,0,"d",["my"],"Lower carb than the rice-based bowls."],
+ ["fb2","fishbowl","Miso Chicken Bowl (regular)","Main",494,27.9,34.3,24.4,7.0,null,0,"d",["my"],"Good fibre — ask for dressing on the side."],
+ ["fb3","fishbowl","Chilli Chicken Bowl (regular)","Main",530,29.1,35.9,27.1,null,null,0,"d",["my"],"Dressing on the side trims the fat."],
+ ["fb4","fishbowl","The O.G. Chicken Bowl (regular)","Main",553,28.5,51.4,24.2,null,989,0,"d",["my"],"Solid all-rounder."],
+ ["fb5","fishbowl","Lemon Chicken Box","Main",554,25.3,43.6,28.5,null,910,0,"d",[],"Crumbed — the bowls are lighter."],
+ ["fb6","fishbowl","Tofu Boys Bowl (regular)","Main",643,22.9,44.9,38.6,null,null,1,"d",["my"],"Plant-based but high fat — go light on dressing."],
+ ["fb7","fishbowl","Braised Beef Warm Bowl (regular)","Main",678,34.5,50.6,34.7,null,null,0,"d",[],"Heaviest bowl here."],
+
+ // Soul Origin — FatSecret AU
+ ["so1","soul","Grilled Chicken Wrap","Main",384,30,35,13,3,900,0,"e",["my"],"Lightest wrap (macros estimated from 384 cal)."],
+ ["so2","soul","Chicken Schnitzel Salad (medium)","Main",409,17.6,22.2,27.8,null,null,0,"d",["my"],"Dressing adds most of the fat."],
+ ["so3","soul","Beef Noodle Salad (regular)","Main",433,26.3,65.6,5.6,null,1390,0,"d",[],"Very low fat, but salty."],
+ ["so4","soul","Falafel Wrap","Main",483,15.0,61.4,18.6,null,952,1,"d",[],"Good veggie option."],
+ ["so5","soul","Chicken Avocado Wrap","Main",507,24.6,36.8,28.1,null,null,0,"d",["my"],"Healthy fats from avo, but a big wrap."],
+ ["so6","soul","Chicken Schnitzel Wrap","Main",576,15.2,45.9,36.2,null,null,0,"d",["my"],"The grilled chicken wrap is much lighter."],
+ ["so7","soul","Bacon & Egg Wrap","Breakfast",435,20.4,35.5,22.7,null,862,0,"d",["ch"],"Moderate breakfast option."],
+ ["so8","soul","Fruit Salad","Side",133,2.5,25.7,0.6,null,53,1,"d",[],"Light and fresh side."],
+ ["so9","soul","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+
+ // Noodle Box — calories from CalorieCounter AU; macros estimated
+ ["nb1","noodle","Tofu & Veg Stir-fry with Rice","Main",520,18,80,14,6,1300,1,"e",["nr"],"Add extra veg for volume."],
+ ["nb2","noodle","Japanese Teriyaki Noodles (chicken)","Main",624,35,85,15,5,2000,0,"e",[],"Ask for less sauce to cut sugar and salt."],
+ ["nb3","noodle","Chinese Honey Soy Noodles (chicken)","Main",647,35,90,16,5,2100,0,"e",[],"Sweet sauce — ask for light."],
+ ["nb4","noodle","Indonesian Satay Noodles (chicken)","Main",732,38,80,28,6,1900,0,"e",[],"Peanut sauce adds fat."],
+ ["nb5","noodle","Fragrant Mongolian Noodles (beef)","Main",793,40,90,28,5,2500,0,"e",[],"Very high sodium."],
+ ["nb6","noodle","Japanese Crunchy Chicken & Fried Rice","Main",827,35,95,33,3,1800,0,"e",[],"Crumbed and fried — a treat."],
+ ["nb7","noodle","Spring Rolls (2)","Side",220,4,26,11,2,350,1,"e",[],"Fried — keep it to one serve."],
+
+ // Schnitz — FatSecret AU
+ ["sc1","schnitz","Schnitz Stick","Main",169,18.2,8.0,7.0,null,263,0,"d",[],"Surprisingly lean snack."],
+ ["sc2","schnitz","Original Tender (1)","Main",152,11.8,11.2,6.5,null,null,0,"d",[],"Have 2 with a garden salad."],
+ ["sc3","schnitz","Schnitzel & Chips","Main",461,22.3,41.1,22.4,null,null,0,"d",[],"Swap the chips for salad."],
+ ["sc4","schnitz","3 Pack Tenders","Main",602,35.7,41,32.5,null,null,0,"d",[],"High fat — share or have 2."],
+ ["sc5","schnitz","The Swiss (burger)","Main",856,43,70.9,43,null,null,0,"d",["my","ch"],"Big burger — a treat."],
+ ["sc6","schnitz","Parma & Chips","Main",897,50.8,78.2,42.2,null,null,0,"d",["ch"],"Very indulgent."],
+ ["sc7","schnitz","Small Original Chips","Side",456,6.8,61.3,20.4,null,null,1,"d",[],"Even the small is a big serve."],
+ ["sc8","schnitz","Regular Original Chips","Side",542,8.1,72.8,24.4,null,null,1,"d",[],"Share them."],
+
+ // Domino's — CalorieKing / FatSecret AU (per slice × 2, large)
+ ["dm1","dominos","Margherita, Thin 'n Crispy (2 slices)","Main",202,8.4,22.6,8.6,null,null,1,"d",[],"Lightest pizza — add a third slice if hungry."],
+ ["dm2","dominos","Ham & Cheese, Classic (2 slices)","Main",236,11.4,34.4,5.2,null,null,0,"d",["tc"],"Low fat for a pizza."],
+ ["dm3","dominos","Peri Peri Chicken, Thin (2 slices)","Main",250,11,24.8,11.4,null,null,0,"d",[],"Chicken keeps it lean."],
+ ["dm4","dominos","Loaded Pepperoni, Thin (2 slices)","Main",256,11,23,13.2,null,null,0,"d",[],"Pepperoni adds fat and sodium."],
+ ["dm5","dominos","Supreme, Thin (2 slices)","Main",264,11.8,24.2,13.2,null,null,0,"d",[],"Stick to two or three slices."],
+ ["dm6","dominos","Peri Peri Chicken, Classic (2 slices)","Main",284,12.6,36,9,null,null,0,"d",["tc"],"Thin crust trims carbs."],
+ ["dm7","dominos","BBQ Brisket, Classic (2 slices)","Main",338,16.6,39.4,12.2,null,null,0,"d",["tc"],"Higher protein than most."],
+ ["dm8","dominos","Supreme, Deep Pan (2 slices)","Main",340,14.6,43.2,11.2,null,null,0,"d",["tc"],"Thin crust saves ~75 cal."],
+ ["dm9","dominos","Garlic Bread","Side",330,8,40,15,2,600,1,"e",[],"Share it."],
+
+ // Pizza Hut — FatSecret / CalorieCounter AU
+ ["ph1","pizzahut","Super Supreme (2 slices, medium)","Main",293,13,31.3,12.8,null,null,0,"d",[],"Stick to two slices."],
+ ["ph2","pizzahut","Hawaiian Personal Pizza","Main",330,15,45,11,null,709,0,"d",[],"Good portion-controlled option."],
+ ["ph3","pizzahut","Hawaiian (2 slices, large)","Main",442,26,52,14,null,792,0,"d",[],"Ham is leaner than pepperoni."],
+ ["ph4","pizzahut","Ultimate Hot & Spicy (2 slices, large)","Main",532,30,50,24,null,null,0,"d",[],"Spicy meats add fat."],
+ ["ph5","pizzahut","Garlic Bread (80 g)","Side",268,8,32,12,null,560,1,"d",[],"Share it."],
+
+ // Betty's Burgers — official Oct 2022 nutrition PDF
+ ["bb1","bettys","Crispy Strips","Main",406,41.65,18.53,18.53,null,850,0,"o",[],"Surprisingly high protein — skip the dipping sauce."],
+ ["bb2","bettys","Crispy Chicken Burger","Main",598,29.25,56.7,27.9,null,1170,0,"d",["nb","my"],"Not lighter than the beef."],
+ ["bb3","bettys","Betty's Classic","Main",698,30.7,53.0,40.4,null,1041,0,"o",["nb","ch","my"],"A proper treat burger."],
+ ["bb4","bettys","Betty's Deluxe","Main",863,43.4,56.1,51.8,null,1705,0,"o",["nb","ch"],"Very indulgent."],
+ ["bb5","bettys","French Fries","Side",358,4.7,46.7,16.7,null,216,1,"o",[],"Share them."],
+ // Boost Juice — FatSecret AU (Original, 610 mL)
+ ["bj1","boost","Mint Condition Blend","Drink",159,2.4,33.4,0.5,null,null,1,"d",[],"One of the lightest smoothies — still mostly fruit sugar."],
+ ["bj2","boost","Two & Five Juice","Drink",170,3.1,36.3,0.4,null,null,1,"d",[],"Veg-heavy juice — lower sugar than most."],
+ ["bj3","boost","Veggie Garden Juice","Drink",172,5.7,27.2,3.3,6.3,261,1,"d",[],"Best fibre of the juices."],
+ ["bj4","boost","Pure Eden Super Smoothie","Drink",174,2.7,36.6,0.5,5.7,null,1,"d",[],"Good fibre for a smoothie."],
+ ["bj5","boost","Brotein","Drink",209,12.3,28.7,4.1,3.8,132,1,"d",[],"Best protein-per-calorie at Boost."],
+ ["bj6","boost","Berry Remedy Juice","Drink",246,2.5,55.8,0.7,2.8,31,1,"d",[],"~55 g sugar — go Junior size."],
+ ["bj7","boost","Power Plant Protein","Drink",290,11.2,51.9,2.0,7.0,219,1,"d",[],"Plant protein with lots of fibre."],
+ ["bj8","boost","Energy Lift","Drink",415,8.3,85.1,4.8,2.6,140,1,"d",[],"85 g carbs — more dessert than drink."],
+ ["bj9","boost","Coffee Dream","Drink",418,16.1,77.2,4.3,null,null,1,"d",[],"Sweet — a flat white is far lighter."],
+ ["bj10","boost","Choc Muscle Hustle","Drink",485,22.3,75.1,8.8,7.4,228,1,"d",[],"Decent protein, but meal-sized calories."],
+ ["bj11","boost","Protein Supreme","Drink",502,29.1,66.4,10.6,11.2,228,1,"d",[],"Works as a meal replacement, not a snack."],
+
+ // Starbucks — FatSecret AU
+ ["st1","starbucks","Brewed Coffee (tall)","Drink",4,0.5,0,0.1,null,null,1,"d",[],"Basically zero calories."],
+ ["st2","starbucks","Caramel Macchiato (short)","Drink",156,6.1,18.0,6.7,0,88,1,"d",["sm"],"Short size keeps it reasonable."],
+ ["st3","starbucks","Iced Choc Hazelnut Macchiato (tall)","Drink",173,6.6,22.4,6.1,null,null,1,"d",["sm"],"Iced versions are lighter than hot."],
+ ["st4","starbucks","Iced Caramel Macchiato (tall)","Drink",178,5.8,23,6.7,null,null,1,"d",["sm"],"Ask for half the syrup."],
+ ["st5","starbucks","Coffee Frappuccino (grande)","Drink",221,3.3,44.8,3.2,null,null,1,"d",[],"Lightest Frappuccino — skip the cream."],
+ ["st6","starbucks","Caramel Macchiato (tall)","Drink",240,10.1,27.2,10.1,null,null,1,"d",["sm"],"Skim milk saves ~50 cal."],
+ ["st7","starbucks","Espresso & Matcha Fusion (tall)","Drink",256,10.5,31,10,null,null,1,"d",["sm"],"Good protein from the milk."],
+ ["st8","starbucks","Caramel Coffee Frappuccino (tall)","Drink",287,3.4,43.4,11.1,null,null,1,"d",[],"A dessert drink — have it as a treat."],
+
+ // Zarraffa's Coffee — FatSecret AU
+ ["zf1","zarraffas","Americano (grande)","Drink",15,1,2.3,1,null,5,1,"d",[],"Near-zero calories."],
+ ["zf2","zarraffas","Flat White (short)","Drink",153,8.8,11.6,8.0,null,89,1,"d",["sm"],"Skim milk saves ~50 cal."],
+ ["zf3","zarraffas","Caffe Mocha (tall)","Drink",339,10.4,49.2,11.5,null,169,1,"d",["sm"],"~42 g sugar — go short."],
+ ["zf4","zarraffas","Caffe Mocha (Masai)","Drink",523,17.2,71.2,17.8,null,254,1,"d",["sm"],"Meal-sized — size down."],
+ ["zf5","zarraffas","Coffee Fusion (Jumbo)","Drink",630,6.4,65.4,38.1,null,null,1,"d",[],"Very high fat — the biggest drink in the app."],
+
+ // Gong Cha — kJ from Gong Cha AU menu; macros estimated
+ ["gc1","gongcha","Alisan Tea","Drink",60,0,15,0,0,10,1,"e",["hs"],"Ask for 0% sugar to make it almost calorie-free."],
+ ["gc2","gongcha","Wintermelon Alisan Tea","Drink",94,0,23.5,0,0,10,1,"e",["hs"],"One of the lightest bubble teas."],
+ ["gc3","gongcha","Longan Honey Tea","Drink",245,0,61,0,0,10,1,"e",["hs"],"Mostly sugar — go half sugar."],
+ ["gc4","gongcha","Milk Foam Green Tea","Drink",288,3,40,13,0,60,1,"e",["hs"],"The foam adds fat — try it without."],
+ ["gc5","gongcha","Oolong Milk Tea","Drink",354,2,55,14,0,60,1,"e",["hs"],"Half sugar saves ~60 cal."],
+ ["gc6","gongcha","Jasmine Milk Tea","Drink",355,2,55,14,0,60,1,"e",["hs"],"Half sugar saves ~60 cal."],
+ ["gc7","gongcha","Thai Mango Smoothie","Drink",401,2,90,3,1,30,1,"e",["hs"],"Very sugary — share or go small."],
+ ["gc8","gongcha","Brown Sugar Fresh Milk & Pearls","Drink",402,8,70,10,0,90,1,"e",["np"],"Brown sugar syrup + pearls = a dessert."],
+ ["gc9","gongcha","Earl Grey Milk Tea & 3Js","Drink",434,2,75,14,0,70,1,"e",["hs","np"],"Toppings add ~100 cal."],
+ ["gc10","gongcha","Royal Pearl Milk Tea","Drink",527,2,90,18,0,80,1,"e",["hs","np"],"Pearls and sugar add up — try 30% sugar, no pearls."],
+ // Cafe 63 — estimates (no published nutrition info)
+ ["c631","cafe63","Egg White Omelette","Breakfast",300,30,20,10,3,700,1,"e",[],"High protein, low fat — one of the best breakfasts around."],
+ ["c632","cafe63","Porridge with Berry Compote","Breakfast",450,12,70,12,7,150,1,"e",[],"Skip the cream and brown sugar to save ~150 cal."],
+ ["c633","cafe63","Bacon & Eggs on Toast","Breakfast",600,35,40,32,3,1600,0,"e",[],"Poached eggs and grilled tomato keep it lighter."],
+ ["c634","cafe63","Smashed Avo, Smoked Salmon & Poached Eggs","Breakfast",650,35,45,36,8,1400,0,"e",["sh"],"Hollandaise on the side saves ~80 cal."],
+ ["c635","cafe63","Potato Rosti Stack, Poached Eggs & Bacon","Breakfast",750,32,55,44,4,1700,0,"e",[],"Rosti is fried — a weekend treat."],
+ ["c636","cafe63","Grilled Barramundi, Fries & Veg","Main",700,40,60,32,7,900,0,"e",["sf"],"Swap fries for salad to make it a healthy pick."],
+ ["c637","cafe63","Chicken Schnitzel, Mushroom Sauce, Fries & Veg","Main",1100,55,85,58,7,1800,0,"e",["sf","sh"],"Big plate — share the fries or swap for salad."],
+ ["c638","cafe63","Rump Steak (200 g), Bacon, Hollandaise, Fries & Salad","Main",1100,60,60,68,6,1600,0,"e",["sf","sh"],"Ask for no bacon and sauce on the side."],
+ ["c639","cafe63","Fresh Watermelon Juice","Drink",120,1,28,0.5,1,5,1,"e",[],"Fresh juice, but still ~25 g natural sugar."],
+ ["c6310","cafe63","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+
+ // Rashays — estimates (no published nutrition info)
+ ["rs1","rashays","Feta Garden Salad (side)","Side",250,8,10,20,4,600,1,"e",["sh"],"Dressing on the side helps."],
+ ["rs2","rashays","Grilled Barramundi, Mash & Veg","Main",600,40,45,26,6,1100,0,"e",[],"Lightest main — a solid choice."],
+ ["rs3","rashays","Original Rashays Chicken, Mash & Veg","Main",750,50,55,35,6,1500,0,"e",["sh"],"Mash & veg is lighter than chips & salad."],
+ ["rs4","rashays","New York Steak, Mash & Veg","Main",800,55,45,42,6,1200,0,"e",["sh"],"Great protein — go easy on the sauce."],
+ ["rs5","rashays","180 g Steak & Chips","Main",850,45,65,45,6,1100,0,"e",["sf"],"Swap chips for salad to save ~250 cal."],
+ ["rs6","rashays","Original Rashays Chicken, Chips & Salad","Main",900,50,75,45,6,1600,0,"e",["sf","sh"],"Ask for mash & veg instead of chips."],
+ ["rs7","rashays","Fish & Chips","Main",1000,35,90,55,6,1400,0,"e",["sf"],"Battered and fried — grilled barramundi is far lighter."],
+ ["rs8","rashays","Chicken Fettuccine","Main",1100,45,95,60,4,1700,0,"e",[],"Creamy pasta — share it or save it for a treat."],
+];
+
+// Standard bottled drinks for every chain (label-based estimates)
+Object.keys(CHAINS).forEach(k=>{
+  const pepsi = k==="kfc";
+  RAW.push([k+"_w",k,"Water (600 mL)","Drink",0,0,0,0,0,0,1,"e",[],"The best drink choice, every time."]);
+  if (CAFE.has(k)) return;
+  RAW.push(
+    [k+"_z",k,(pepsi?"Pepsi Max":"Coke No Sugar")+" (600 mL)","Drink",3,0,0.5,0,0,60,1,"e",[],"Zero sugar — a much better swap than regular soft drink."],
+    [k+"_s",k,(pepsi?"Pepsi":"Coca-Cola")+" (600 mL)","Drink",255,0,64,0,0,30,1,"e",[],"About 16 teaspoons of sugar — go no-sugar or water."]
+  );
+});
+
+const ITEMS = RAW.map(([id,chain,name,type,cal,p,c,f,fib,na,veg,src,tw,tip])=>{
+  const it={id,chain,name,type,cal,p,c,f,fib,na,veg:!!veg,src,tw,tip};
+  finish(it); return it;
+});
+const BY_ID = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+
+function finish(it){
+  it.ppc = it.cal? +(it.p/it.cal*100).toFixed(1) : 0;
+  it.rating = rate(it);
+  return it;
+}
+function rate(it){
+  const DOWN = {g:"a",a:"r",r:"r"};
+  if (it.type==="Drink") return (it.cal<=60 || (it.p>=10 && it.cal<=250)) ? "g" : (it.cal<=250 || (it.p>=20 && it.cal<=520)) ? "a" : "r";
+  const fatPct = it.cal? it.f*9/it.cal : 0;
+  let r;
+  if (it.type==="Side") r = (it.cal<=180 && fatPct<=0.4) ? "g" : it.cal<=300 ? "a" : "r";
+  else if (it.cal<=450 && fatPct<=0.35 && (it.ppc>=5 || it.cal<=250)) r="g";
+  else if (it.cal<=600 && fatPct<=0.45) r="a";
+  else r="r";
+  if (it.na!=null && ((it.type!=="Side" && it.na>1500) || (it.type==="Side" && it.na>600))) r = DOWN[r];
+  return r;
+}
+const RATING_LABEL = {g:"Healthy pick", a:"Moderate", r:"Treat"};
+const ORDER = {g:0,a:1,r:2};
+
+function applyTweaks(base, tw){
+  if(!tw || !tw.length) return base;
+  const m = {...base};
+  tw.forEach(k=>{ const d=TWEAKS[k].fn?TWEAKS[k].fn(m):TWEAKS[k].d;
+    m.cal+=d[0]; m.p+=d[1]; m.c+=d[2]; m.f+=d[3];
+    if(m.fib!=null) m.fib+=d[4]; if(m.na!=null) m.na+=d[5]; });
+  ["cal","p","c","f","fib","na"].forEach(k=>{ if(m[k]!=null) m[k]=Math.max(0,Math.round(m[k]*10)/10); });
+  m.cal=Math.round(m.cal); if(m.na!=null) m.na=Math.round(m.na);
+  return finish(m);
+}
+
+// Daily reference values (Australian guides)
+const DAY = {kj:8700, cal:2080, na:2000, fib:30};
+
+// ================= STATE =================
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const DEFAULT_F = {rating:"all", type:"all", maxCal:1100, minPro:0, maxNa:2600, lowCarb:false, lowFat:false, hiFib:false, veg:false, checked:false};
+let favs = new Set(store.get("tm_favs",[]).filter(id=>BY_ID[id]));
+let filters = {...DEFAULT_F, ...store.get("tm_filters",{})};
+let draft = {...filters};
+let meal = store.get("tm_meal",[]).filter(l=>BY_ID[l.id]);
+let chain = "all", tab = "at", query = "", atQuery = "";
+let sort = store.get("tm_sort","health");
+let atChain = store.get("tm_at",null);
+let detail = null; // {id, tw:Set}
+
+// ================= HELPERS =================
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const kj = cal=>Math.round(cal*4.184);
+const fmt = v=>v==null?"—":(Math.round(v*10)/10);
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1600); }
+function saveMeal(){ store.set("tm_meal",meal); updateBadges(); }
+function updateBadges(){
+  const fc=$("#favCount"); fc.textContent=favs.size; fc.style.display=favs.size?"grid":"none";
+  const mc=$("#mealCount"); mc.textContent=meal.length; mc.style.display=meal.length?"grid":"none";
+}
+function macroBar(it){
+  const pc=it.p*4, cc=it.c*4, fc=it.f*9, t=pc+cc+fc||1;
+  return `<div class="bar"><i style="width:${pc/t*100}%;background:var(--p)"></i><i style="width:${cc/t*100}%;background:var(--c)"></i><i style="width:${fc/t*100}%;background:var(--f)"></i></div>`;
+}
+const heartSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="#6F6B63" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
+
+function card(it){
+  const ch=CHAINS[it.chain];
+  return `<div class="card" data-open="${it.id}" role="button" tabindex="0">
+    <div class="badge" style="background:${ch.color}">${ch.icon}</div>
+    <div class="card-body">
+      <div class="card-top">
+        <div><div class="name">${esc(it.name)}</div><div class="chain">${ch.name} · ${it.type}</div></div>
+        <button class="heart ${favs.has(it.id)?"on":""}" data-fav="${it.id}" aria-label="Favourite">${heartSvg}</button>
+      </div>
+      <div class="row2"><span class="pill ${it.rating}">${RATING_LABEL[it.rating]}</span><span class="kcal">${it.cal} <span>cal · ${kj(it.cal)} kJ</span></span><span class="src ${it.src}">${SRC_LABEL[it.src]}</span></div>
+      <div class="macros">
+        <span><i class="m-dot" style="background:var(--p)"></i>P <b>${fmt(it.p)}g</b></span>
+        <span><i class="m-dot" style="background:var(--c)"></i>C <b>${fmt(it.c)}g</b></span>
+        <span><i class="m-dot" style="background:var(--f)"></i>F <b>${fmt(it.f)}g</b></span>
+        <span>Na <b>${it.na==null?"—":it.na+"mg"}</b></span>
+        <span>Fib <b>${it.fib==null?"—":fmt(it.fib)+"g"}</b></span>
+      </div>
+      ${it.cal?macroBar(it):""}
+    </div>
+  </div>`;
+}
+
+function filtersActive(f){ return Object.keys(DEFAULT_F).some(k=>f[k]!==DEFAULT_F[k]); }
+function applyAll(list, f=filters, useFilters=true){
+  const q=query.trim().toLowerCase();
+  return list.filter(it=>{
+    if (chain!=="all" && it.chain!==chain) return false;
+    if (q && !(it.name.toLowerCase().includes(q) || CHAINS[it.chain].name.toLowerCase().includes(q))) return false;
+    if (!useFilters) return true;
+    if (f.rating!=="all" && it.rating!==f.rating) return false;
+    if (f.type!=="all" && it.type!==f.type) return false;
+    if (it.cal>f.maxCal) return false;
+    if (it.p<f.minPro) return false;
+    if (f.maxNa<2600 && it.na!=null && it.na>f.maxNa) return false;
+    if (f.lowCarb && it.c>=20) return false;
+    if (f.lowFat && it.f>=15) return false;
+    if (f.hiFib && !(it.fib!=null && it.fib>=4)) return false;
+    if (f.veg && !it.veg) return false;
+    if (f.checked && it.src==="e") return false;
+    return true;
+  });
+}
+function sortList(list, s=sort){
+  const l=[...list];
+  const naV=i=>i.na==null?99999:i.na;
+  if (s==="health") l.sort((a,b)=>ORDER[a.rating]-ORDER[b.rating] || b.ppc-a.ppc);
+  if (s==="cal") l.sort((a,b)=>a.cal-b.cal);
+  if (s==="protein") l.sort((a,b)=>b.p-a.p);
+  if (s==="ppc") l.sort((a,b)=>b.ppc-a.ppc);
+  if (s==="na") l.sort((a,b)=>naV(a)-naV(b));
+  return l;
+}
+function sortSelect(){
+  const o=[["health","Healthiest first"],["cal","Lowest calories"],["protein","Most protein"],["ppc","Protein per calorie"],["na","Lowest sodium"]];
+  return `<select id="sortSel" aria-label="Sort">${o.map(([v,l])=>`<option value="${v}"${sort===v?" selected":""}>${l}</option>`).join("")}</select>`;
+}
+function renderChips(){
+  const opts=[["all","All",""],...Object.entries(CHAINS).map(([k,v])=>[k,v.name,v.icon])];
+  $("#chainChips").innerHTML = opts.map(([k,l,ic])=>`<button class="chip ${chain===k?"active":""}" data-chain="${k}">${ic?`<span aria-hidden="true">${ic}</span>`:""}${l}</button>`).join("");
+}
+
+// ---- meal totals ----
+function lineItem(l){ return applyTweaks(BY_ID[l.id], l.tw); }
+function totals(lines){
+  const t={cal:0,p:0,c:0,f:0,fib:0,na:0,fibMissing:false,naMissing:false};
+  lines.forEach(m=>{ t.cal+=m.cal; t.p+=m.p; t.c+=m.c; t.f+=m.f;
+    if(m.fib==null) t.fibMissing=true; else t.fib+=m.fib;
+    if(m.na==null) t.naMissing=true; else t.na+=m.na; });
+  const fatPct = t.cal? t.f*9/t.cal : 0;
+  t.rating = (t.cal<=700 && fatPct<=0.35 && t.na<=1500 && (t.p>=25)) ? "g" : (t.cal<=1000 && t.na<=2300) ? "a" : "r";
+  return t;
+}
+function summaryCard(t, label){
+  const pct=(v,max)=>Math.min(100,Math.round(v/max*100));
+  return `<div class="sum">
+    <div class="top"><div><div class="big">${Math.round(t.cal)}</div><div class="unit">cal · ${kj(t.cal)} kJ · ${pct(t.cal,DAY.cal)}% of a day</div></div><span class="pill ${t.rating}">${label||RATING_LABEL[t.rating]}</span></div>
+    <div class="sum-grid">
+      <div><b>${fmt(t.p)}g</b>Protein</div><div><b>${fmt(t.c)}g</b>Carbs</div><div><b>${fmt(t.f)}g</b>Fat</div>
+      <div><b>${fmt(t.fib)}g${t.fibMissing?"+":""}</b>Fibre</div><div><b>${Math.round(t.na)}${t.naMissing?"+":""}</b>mg Na</div>
+    </div>
+    <div class="meter">Sodium ${pct(t.na,DAY.na)}% of the 2,000 mg daily target${t.naMissing?" (some items unknown)":""}<div class="track"><i style="width:${pct(t.na,DAY.na)}%;background:${t.na>DAY.na*0.75?"#F5A383":t.na>DAY.na*0.5?"#F7CF7F":"#7EE2A8"}"></i></div></div>
+    <div class="meter">Fibre ${pct(t.fib,DAY.fib)}% of 30 g a day${t.fibMissing?" (some items unknown)":""}<div class="track"><i style="width:${pct(t.fib,DAY.fib)}%;background:#7EE2A8"></i></div></div>
+  </div>`;
+}
+
+// ---- I'm at: best picks ----
+function bestFor(k){
+  const items=ITEMS.filter(i=>i.chain===k);
+  const best=(type)=>sortList(items.filter(i=>i.type===type),"health");
+  let mains=sortList(items.filter(i=>i.type==="Main"||i.type==="Breakfast"),"health").slice(0,3);
+  if(!mains.length) return {mains:[], side:null, drink:null, drinks:best("Drink").slice(0,5)};
+  const side=best("Side")[0]||null;
+  const drink=best("Drink")[0]||null;
+  return {mains,side,drink};
+}
+
+// ================= RENDER =================
+function render(){
+  $("#filterBtn").classList.toggle("on", filtersActive(filters));
+  const listTabs = tab==="browse"||tab==="favs";
+  $("#searchRow").style.display = (listTabs||tab==="at")?"flex":"none";
+  $("#q").placeholder = tab!=="at" ? "Search menu items" : atChain ? `Search the ${CHAINS[atChain].name} menu` : "Search chains or menu items";
+  $("#chainChips").style.display = listTabs?"flex":"none";
+  $("#filterBtn").style.display = tab==="browse"?"grid":"none";
+  const titles={browse:["Takeaway Macros","Find the healthier order, fast"],at:["I'm at…","Your best orders, right now"],meal:["Meal builder","Add items to see your totals"],favs:["Favourites","Your saved go-to orders"],about:["Guide","Ratings, sources & install"]};
+  $("#pageTitle").textContent=titles[tab][0]; $("#pageSub").textContent=titles[tab][1];
+  const m=$("#main");
+
+  if (tab==="browse"){
+    const list=sortList(applyAll(ITEMS));
+    m.innerHTML=`<div class="meta"><span>${list.length} item${list.length===1?"":"s"}</span>${sortSelect()}</div>`+
+      (list.length?`<div class="list">${list.map(card).join("")}</div>`:`<div class="empty"><div class="big">🥗</div>No items match.<br>Try loosening your filters.</div>`);
+  }
+
+  if (tab==="favs"){
+    const list=sortList(applyAll(ITEMS.filter(i=>favs.has(i.id)),filters,false));
+    m.innerHTML = list.length?`<div class="meta"><span>${list.length} saved</span>${sortSelect()}</div><div class="list">${list.map(card).join("")}</div>`
+      :`<div class="empty"><div class="big">♡</div>No favourites yet.<br>Tap the heart on any item to save it here.</div>`;
+  }
+
+  if (tab==="at"){
+    const aq = atQuery.trim().toLowerCase();
+    const itemMatch = i => i.name.toLowerCase().includes(aq);
+    if (!atChain){
+      const chains = Object.entries(CHAINS).filter(([k,v])=>!aq || v.name.toLowerCase().includes(aq) || ITEMS.some(i=>i.chain===k && itemMatch(i)));
+      const hits = aq.length>=2 ? sortList(ITEMS.filter(itemMatch),"health").slice(0,30) : [];
+      m.innerHTML=`<p class="section-p" style="margin-top:8px">${aq?`${chains.length} place${chains.length===1?"":"s"} match “${esc(atQuery.trim())}”.`:"Tap where you're ordering from to see the best picks."}</p>
+        ${chains.length?`<div class="grid">${chains.map(([k,v])=>`<button class="tile" data-at="${k}"><span class="badge" style="background:${v.color}">${v.icon}</span>${v.name}</button>`).join("")}</div>`:`<div class="empty"><div class="big">🔍</div>No chains or items match.</div>`}
+        ${hits.length?`<div class="section-h">Matching menu items</div><div class="list">${hits.map(card).join("")}</div>`:""}`;
+    } else if (aq){
+      const ch=CHAINS[atChain];
+      const hits=sortList(ITEMS.filter(i=>i.chain===atChain && itemMatch(i)),"health");
+      m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${hits.length} result${hits.length===1?"":"s"} for “${esc(atQuery.trim())}”</div></div><button class="link-btn" data-at="">Change</button></div>
+        ${hits.length?`<div class="list" style="margin-top:12px">${hits.map(card).join("")}</div>`:`<div class="empty"><div class="big">🔍</div>Nothing on the ${esc(ch.name)} menu matches.<br>Clear the search to see the best picks.</div>`}`;
+    } else {
+      const ch=CHAINS[atChain], b=bestFor(atChain);
+      if (b.drinks){
+        const picks=b.drinks.filter(i=>!/_w$/.test(i.id)).slice(0,5);
+        m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${SRC_LABEL[SOURCES[atChain][0]]} figures</div></div><button class="link-btn" data-at="">Change</button></div>
+          <div class="section-h">Best drinks</div>
+          <p class="section-p">Ranked by health rating, then protein per calorie. Tap one to customise it or add it to your meal.</p>
+          <div class="list">${picks.map(card).join("")}</div>
+          <div class="sheet-actions"><button class="btn light" data-fullmenu="${atChain}">See full ${esc(ch.name)} menu</button></div>`;
+        updateBadges(); return;
+      }
+      const showSide = b.side && b.side.rating!=="r";
+      const comboItems=[b.mains[0], showSide?b.side:null, b.drink].filter(Boolean);
+      m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${SRC_LABEL[SOURCES[atChain][0]]} figures</div></div><button class="link-btn" data-at="">Change</button></div>
+        <div class="section-h">Best combo here</div>
+        <p class="section-p">${comboItems.map(i=>esc(i.name)).join(" + ")}</p>
+        ${summaryCard(totals(comboItems))}
+        <div class="sheet-actions" style="margin-top:12px"><button class="btn green" data-addcombo="${comboItems.map(i=>i.id).join(",")}">Add combo to meal</button></div>
+        <div class="section-h">Best mains</div>
+        <div class="list">${b.mains.map(card).join("")}</div>
+        ${b.side?`<div class="section-h">Best side</div><div class="list">${card(b.side)}</div>`:""}
+        ${b.drink?`<div class="section-h">Best drink</div><div class="list">${card(b.drink)}</div>`:""}
+        <div class="sheet-actions"><button class="btn light" data-fullmenu="${atChain}">See full ${esc(ch.name)} menu</button></div>`;
+    }
+  }
+
+  if (tab==="meal"){
+    if (!meal.length){
+      m.innerHTML=`<div class="empty"><div class="big">🧺</div>Your meal is empty.<br>Open any item and tap <b>Add to meal</b>, or use <b>I'm at…</b> for a quick combo.</div>`;
+    } else {
+      const lines=meal.map(lineItem);
+      const t=totals(lines);
+      m.innerHTML = summaryCard(t) +
+        `<div class="meta" style="margin-top:16px"><span>${meal.length} item${meal.length===1?"":"s"}</span><button class="link-btn" id="clearMeal">Clear meal</button></div>
+        <div class="list">${meal.map((l,i)=>{ const it=lines[i], ch=CHAINS[it.chain];
+          return `<div class="line"><span class="badge" style="background:${ch.color}">${ch.icon}</span>
+            <div class="grow" data-openline="${i}" style="cursor:pointer"><div class="nm">${esc(it.name)}</div>
+            ${l.tw&&l.tw.length?`<div class="tw">${l.tw.map(k=>TWEAKS[k].l).join(" · ")}</div>`:`<div class="chain">${ch.name}</div>`}</div>
+            <span class="cl">${it.cal} cal</span><button class="x" data-rm="${i}" aria-label="Remove">✕</button></div>`; }).join("")}</div>
+        <p class="section-p" style="margin-top:12px">“+” means some items don't publish that figure, so the real total is higher. The meal rating looks at calories, fat, protein and sodium together.</p>`;
+    }
+  }
+
+  if (tab==="about"){
+    const srcRows=Object.entries(SOURCES).map(([k,[s,label,url]])=>`<li>${CHAINS[k].icon} <b>${CHAINS[k].name}</b> <span class="src ${s}">${SRC_LABEL[s]}</span><br><span style="color:var(--muted)">${esc(label)}</span>${url?` — <a href="${url}" target="_blank" rel="noopener">source</a>`:""}</li>`).join("");
+    m.innerHTML=`<div class="about">
+      <div class="section-h">How items are rated</div>
+      <div class="legend-row"><span class="pill g">Healthy pick</span><div>Mains ≤450 cal, fat ≤35% of calories and good protein (≥5 g per 100 cal). Sides ≤180 cal. Drinks ≤10 cal.</div></div>
+      <div class="legend-row"><span class="pill a">Moderate</span><div>Mains up to 600 cal with fat ≤45%. Fine some of the time.</div></div>
+      <div class="legend-row"><span class="pill r">Treat</span><div>Over 600 cal or fat-heavy. Enjoy occasionally, or share.</div></div>
+      <p>Very salty items drop one level: mains over 1,500 mg sodium, sides over 600 mg. Tweaks you choose (like no cheese) recalculate the rating.</p>
+      <div class="section-h">Sodium & fibre</div>
+      <p>Australian guidelines suggest keeping sodium to about <b>2,000 mg a day</b> and aiming for <b>25–30 g of fibre</b>. Many takeaway mains use half your sodium in one go. “—” means the chain doesn't publish that figure.</p>
+      <div class="section-h">Where the numbers come from</div>
+      <p><span class="src o">Official</span> chain's own nutrition info · <span class="src d">Database</span> Australian nutrition databases (FatSecret / CalorieKing), which compile chain data · <span class="src e">Estimate</span> my best estimate — check before relying on it. Tweak adjustments are always estimates.</p>
+      <ul class="src-list">${srcRows}</ul>
+      <div class="section-h">Install as an app</div>
+      <ol><li>Open the app's link on your phone.</li>
+      <li><b>iPhone:</b> Safari → Share → <b>Add to Home Screen</b>. <b>Android:</b> Chrome → ⋮ → <b>Install app</b>.</li></ol>
+      <p>It then opens full-screen with its own icon, and works offline after the first visit.</p>
+      <div class="disclaimer"><b>Note:</b> General guidance only. Menus, recipes and portions change, and your custom order will differ — check each chain's official nutrition info for exact numbers. 1 cal (kcal) = 4.184 kJ; the average adult daily intake used here is 8,700 kJ.</div>
+    </div>`;
+  }
+  updateBadges();
+}
+
+function ring(val,max,color){
+  const r=24, C=2*Math.PI*r, pct=Math.min(val/max,1);
+  return `<svg viewBox="0 0 60 60"><circle cx="30" cy="30" r="${r}" fill="none" stroke="#E7E3DA" stroke-width="7"/><circle cx="30" cy="30" r="${r}" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${C*pct} ${C}" transform="rotate(-90 30 30)"/></svg>`;
+}
+
+function renderDetail(){
+  const base=BY_ID[detail.id], tw=[...detail.tw], it=applyTweaks(base,tw), ch=CHAINS[it.chain];
+  const pc=it.p*4, cc=it.c*4, fc=it.f*9, t=(pc+cc+fc)||1;
+  const swap = sortList(ITEMS.filter(i=>i.chain===it.chain && i.type===it.type && i.id!==it.id && ORDER[i.rating]<ORDER[it.rating]),"ppc")[0];
+  const delta = it.cal-base.cal;
+  $("#detailSheet").innerHTML = `<div class="grab"></div>
+    <div class="d-head">
+      <div class="badge" style="background:${ch.color}">${ch.icon}</div>
+      <div style="flex:1"><h2>${esc(it.name)}</h2><div class="chain">${ch.name} · ${it.type} · <span class="src ${it.src}">${SRC_LABEL[it.src]}</span></div></div>
+      <button class="heart ${favs.has(it.id)?"on":""}" data-fav="${it.id}" aria-label="Favourite">${heartSvg}</button>
+    </div>
+    <div class="d-kcal"><b>${it.cal}</b><span>cal · ${kj(it.cal)} kJ</span>${delta?`<span class="delta">(${delta>0?"+":""}${delta} from tweaks)</span>`:""}<span class="pill ${it.rating}" style="margin-left:auto">${RATING_LABEL[it.rating]}</span></div>
+    ${it.cal?macroBar(it):""}
+    <div class="ring-row">
+      <div class="ring">${ring(it.p,60,"var(--p)")}<div class="v">${fmt(it.p)}g</div><div class="l">Protein · ${Math.round(pc/t*100)}%</div></div>
+      <div class="ring">${ring(it.c,100,"var(--c)")}<div class="v">${fmt(it.c)}g</div><div class="l">Carbs · ${Math.round(cc/t*100)}%</div></div>
+      <div class="ring">${ring(it.f,50,"var(--f)")}<div class="v">${fmt(it.f)}g</div><div class="l">Fat · ${Math.round(fc/t*100)}%</div></div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat">Sodium<b>${it.na==null?"Not published":it.na+" mg · "+Math.round(it.na/DAY.na*100)+"%"}</b></div>
+      <div class="stat">Fibre<b>${it.fib==null?"Not published":fmt(it.fib)+" g"}</b></div>
+      <div class="stat">Protein per 100 cal<b>${it.ppc} g</b></div>
+      <div class="stat">Of an 8,700 kJ day<b>${Math.round(kj(it.cal)/DAY.kj*100)}%</b></div>
+    </div>
+    ${base.tw.length?`<div class="why"><h3>Customise</h3>${base.tw.map(k=>{const d=TWEAKS[k].fn?TWEAKS[k].fn(base):TWEAKS[k].d;return `<button class="tw-chip ${detail.tw.has(k)?"on":""}" data-tw="${k}">${detail.tw.has(k)?"✓ ":""}${TWEAKS[k].l} <span class="delta">${d[0]>0?"+":""}${d[0]}</span></button>`;}).join("")}<div class="delta" style="margin-top:4px">Tweak values are estimates.</div></div>`:""}
+    <div class="why"><h3>Make it healthier</h3>${esc(it.tip)}</div>
+    ${swap?`<div class="why"><h3>Healthier swap at ${esc(ch.name)}</h3><button data-open="${swap.id}" style="text-align:left;width:100%"><b>${esc(swap.name)}</b> — ${swap.cal} cal, ${fmt(swap.p)} g protein <span class="pill ${swap.rating}">${RATING_LABEL[swap.rating]}</span></button></div>`:""}
+    <div class="sheet-actions"><button class="btn light" data-close>Close</button><button class="btn green" id="addMeal">Add to meal</button></div>`;
+}
+function openDetail(id, tw=[]){ detail={id, tw:new Set(tw)}; renderDetail(); openSheet("#detailSheet"); }
+
+// ================= SHEETS =================
+let openId=null;
+function openSheet(sel){ document.querySelectorAll(".sheet").forEach(s=>s.classList.remove("show")); openId=sel; $(sel).classList.add("show"); $("#scrim").classList.add("show"); $(sel).scrollTop=0; }
+function closeSheets(){ document.querySelectorAll(".sheet").forEach(s=>s.classList.remove("show")); $("#scrim").classList.remove("show"); openId=null; detail=null; render(); }
+
+function renderFilterSheet(){
+  const seg=(el,key,opts)=>{ $(el).innerHTML=opts.map(([v,l])=>`<button class="chip ${draft[key]===v?"active":""}" data-f="${key}" data-v="${v}">${l}</button>`).join(""); };
+  seg("#fRating","rating",[["all","All"],["g","Healthy"],["a","Moderate"],["r","Treat"]]);
+  seg("#fType","type",[["all","All"],["Main","Mains"],["Side","Sides"],["Breakfast","Breakfast"],["Drink","Drinks"]]);
+  $("#fCal").value=draft.maxCal; $("#calOut").textContent=draft.maxCal>=1100?"Any":`≤ ${draft.maxCal} cal`;
+  $("#fPro").value=draft.minPro; $("#proOut").textContent=draft.minPro?`≥ ${draft.minPro} g`:"Any";
+  $("#fNa").value=draft.maxNa; $("#naOut").textContent=draft.maxNa>=2600?"Any":`≤ ${draft.maxNa} mg`;
+  document.querySelectorAll("[data-toggle]").forEach(r=>r.querySelector(".sw-t").classList.toggle("on",!!draft[r.dataset.toggle]));
+  const n=applyAll(ITEMS,draft).length; $("#applyF").textContent=`Show ${n} result${n===1?"":"s"}`;
+}
+
+// ================= EVENTS =================
+function setTab(t){ tab=t; $("#q").value = t==="at" ? atQuery : query; document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===t)); render(); window.scrollTo({top:0}); }
+
+document.addEventListener("click",e=>{
+  const fav=e.target.closest("[data-fav]");
+  if(fav){ e.stopPropagation(); const id=fav.dataset.fav; favs.has(id)?favs.delete(id):favs.add(id); store.set("tm_favs",[...favs]);
+    document.querySelectorAll(`[data-fav="${id}"]`).forEach(b=>b.classList.toggle("on",favs.has(id)));
+    if(tab==="favs" && !openId) render(); else updateBadges(); return; }
+  const tw=e.target.closest("[data-tw]"); if(tw&&detail){ const k=tw.dataset.tw; detail.tw.has(k)?detail.tw.delete(k):detail.tw.add(k); const st=$("#detailSheet").scrollTop; renderDetail(); $("#detailSheet").scrollTop=st; return; }
+  if(e.target.closest("#addMeal")&&detail){ meal.push({id:detail.id, tw:[...detail.tw]}); saveMeal(); toast("Added to meal ✓"); closeSheets(); return; }
+  const op=e.target.closest("[data-open]"); if(op){ openDetail(op.dataset.open); return; }
+  const ol=e.target.closest("[data-openline]"); if(ol){ const l=meal[+ol.dataset.openline]; openDetail(l.id,l.tw); return; }
+  const rm=e.target.closest("[data-rm]"); if(rm){ meal.splice(+rm.dataset.rm,1); saveMeal(); render(); return; }
+  if(e.target.closest("#clearMeal")){ meal=[]; saveMeal(); render(); return; }
+  const ac=e.target.closest("[data-addcombo]"); if(ac){ ac.dataset.addcombo.split(",").forEach(id=>meal.push({id,tw:[]})); saveMeal(); toast("Combo added to meal ✓"); return; }
+  const at=e.target.closest("[data-at]"); if(at){ atChain=at.dataset.at||null; atQuery=""; $("#q").value=""; store.set("tm_at",atChain); render(); window.scrollTo({top:0}); return; }
+  const fm=e.target.closest("[data-fullmenu]"); if(fm){ chain=fm.dataset.fullmenu; renderChips(); setTab("browse"); return; }
+  const ch=e.target.closest("[data-chain]"); if(ch){ chain=ch.dataset.chain; renderChips(); render(); return; }
+  const nb=e.target.closest(".nav-btn"); if(nb){ setTab(nb.dataset.tab); return; }
+  const fs=e.target.closest("[data-f]"); if(fs){ draft[fs.dataset.f]=fs.dataset.v; renderFilterSheet(); return; }
+  const tg=e.target.closest("[data-toggle]"); if(tg){ const k=tg.dataset.toggle; draft[k]=!draft[k]; renderFilterSheet(); return; }
+  if(e.target.closest("[data-close]")){ closeSheets(); return; }
+});
+$("#scrim").addEventListener("click",closeSheets);
+$("#filterBtn").addEventListener("click",()=>{ draft={...filters}; renderFilterSheet(); openSheet("#filterSheet"); });
+$("#fCal").addEventListener("input",e=>{ draft.maxCal=+e.target.value; renderFilterSheet(); });
+$("#fPro").addEventListener("input",e=>{ draft.minPro=+e.target.value; renderFilterSheet(); });
+$("#fNa").addEventListener("input",e=>{ draft.maxNa=+e.target.value; renderFilterSheet(); });
+$("#resetF").addEventListener("click",()=>{ draft={...DEFAULT_F}; renderFilterSheet(); });
+$("#applyF").addEventListener("click",()=>{ filters={...draft}; store.set("tm_filters",filters); closeSheets(); });
+$("#q").addEventListener("input",e=>{ if(tab==="at") atQuery=e.target.value; else query=e.target.value; render(); });
+document.addEventListener("change",e=>{ if(e.target.id==="sortSel"){ sort=e.target.value; store.set("tm_sort",sort); render(); } });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&openId) closeSheets(); if(e.key==="Enter"){ const c=e.target.closest&&e.target.closest(".card"); if(c) openDetail(c.dataset.open);} });
+
+renderChips(); render();
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+</script>
+</body>
+</html>
