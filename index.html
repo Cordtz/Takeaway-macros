@@ -39,6 +39,19 @@ h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-.02em}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.crave-wrap .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:10px}
+.crave-wrap .chips{padding-top:6px}
+.chip.hide-chip{border-style:dashed}
+.chip.hide-chip.on{background:#FCE9E2;border-color:#F5A383;color:#8A3B1E}
+.hide-note{font-size:13px;color:var(--muted);margin:10px 0 0}
+.hide-note button{color:var(--ink);font-weight:700;text-decoration:underline}
+.dl-grid{display:flex;flex-wrap:wrap;gap:8px}
+.dl-grid .chip.active{background:#8A3B1E;border-color:#8A3B1E}
+.dl-input{width:100%;height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font:inherit;font-size:16px;background:var(--card)}
+.hidden-list{display:flex;flex-direction:column;gap:6px}
+.hidden-list .hl{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:14px}
+.hidden-list .hl .grow{flex:1;min-width:0}
+.hidden-list .hl small{display:block;color:var(--muted)}
 main{padding:4px 16px}
 .meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted);margin:6px 2px 10px}
 .meta select{font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:var(--ink)}
@@ -187,6 +200,7 @@ input[type=range]{width:100%;accent-color:var(--ink)}
       </button>
     </div>
     <div class="chips" id="chainChips"></div>
+    <div class="crave-wrap" id="craveWrap"><div class="lbl">What do you feel like?</div><div class="chips" id="craveChips"></div></div>
   </header>
   <main id="main"></main>
 </div>
@@ -234,6 +248,19 @@ input[type=range]{width:100%;accent-color:var(--ink)}
   </div>
 </div>
 
+<div class="sheet" id="dislikeSheet" role="dialog" aria-label="Hide what you don't like">
+  <div class="grab"></div>
+  <h2>Hide what you don't like</h2>
+  <p class="section-p">Anything matching these is hidden everywhere — menus, best picks and combos.</p>
+  <div class="f-group"><div class="f-label">Ingredients</div><div class="dl-grid" id="dlChips"></div></div>
+  <div class="f-group"><div class="f-label">Other words to hide</div><input class="dl-input" id="dlCustom" placeholder="e.g. olives, coriander, mustard" autocomplete="off"><small style="color:var(--muted);font-size:12px">Separate with commas. Matches item names.</small></div>
+  <div class="f-group"><div class="f-label">Items you've hidden</div><div class="hidden-list" id="dlHidden"></div></div>
+  <div class="sheet-actions">
+    <button class="btn light" id="dlReset">Clear all</button>
+    <button class="btn dark" id="dlDone">Done</button>
+  </div>
+</div>
+
 <div class="sheet" id="detailSheet" role="dialog" aria-label="Item details"></div>
 <div class="toast" id="toast"></div>
 
@@ -271,28 +298,28 @@ const CAFE = new Set(["boost","starbucks","zarraffas","gongcha","cafe63","hj"]);
 const SOURCES = {
   subway:  ["o","Subway Australia nutrition information (May 2026 guide)","https://www.subway.com/en-AU/MenuNutrition/Nutrition"],
   nandos:  ["o","Nando's Australia menu pages (every item on nandos.com.au/menu-item)","https://www.nandos.com.au/menu-item"],
-  gyg:     ["o","Guzman y Gomez Nutrition & Allergen Guide (8 October 2026)","https://www.guzmanygomez.com.au/wp-content/uploads/2026/10/261008_NUTRITION_ALLERGEN_GUIDE_420X297MM.pdf"],
+  gyg: ["o","Guzman y Gomez Nutrition & Allergen Guide (8 October 2026)","https://www.guzmanygomez.com.au/nutrition/"],
   zamb:    ["o","Zambrero Nutritional Information AUS (April 2026, no sauce; fibre not published)","https://dph95f73vdxmz.cloudfront.net/uploads/ops/resources/Zambrero-Nutritional-AUS-APRIL-2026.pdf"],
-  grilld:  ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/grilld/simply-grilld/1-burger"],
+  grilld:  ["o","Grill'd online menu nutrition panels (Nov 2026)","https://grilld.com.au/nutrition"],
   hj: ["o","Hungry Jack's nutrition guides (Nov 2026)","https://www.hungryjacks.com.au/nutrition-info"],
   kfc: ["d","Energy from KFC's Nutrition & Allergen Guide; protein, carbs & fat from FatSecret AU","https://www.kfc.com.au/nutrition-allergen"],
-  oporto: ["d","FatSecret Australia listings (Oporto's menu figures only load in their app)","https://www.oporto.com.au/menu/"],
-  rooster: ["d","FatSecret Australia listings (Red Rooster's menu figures only load in their app)","https://www.redrooster.com.au/menu/"],
+  oporto: ["e","Energy (kJ) from Oporto's online menu; protein, carbs and fat estimated (Oporto only publishes energy)","https://www.oporto.com.au/menu/"],
+  rooster: ["e","Energy (kJ) from Red Rooster's online menu; protein, carbs and fat estimated (Red Rooster only publishes energy)","https://www.redrooster.com.au/menu/"],
   rolld:   ["o","Roll'd product pages and FatSecret Australia","https://rolld.com.au/products/tofu-rice-paper-roll"],
-  mcd: ["d","FatSecret AU (McDonald's main menu PDF isn't currently linked on their nutrition page); a few items estimated","https://www.mcdonalds.com/au/en-au/about-us/our-impact/food-sourcing/nutrition.html"],
+  mcd: ["o","McDonald's Australia product nutrition panels (mcdonalds.com/au, Nov 2026); drinks estimated","https://www.mcdonalds.com/au/en-au/menu/burgers.html"],
   fishbowl:["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/search?q=fishbowl"],
-  soul:    ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/soul-origin/falafel-wrap/1-serving"],
-  noodle:  ["e","Calories from CalorieCounter Australia; protein, carbs and fat estimated","https://www.caloriecounter.com.au/?p=639075"],
-  schnitz: ["d","FatSecret Australia listings","https://www.fatsecret.com.au/calories-nutrition/schnitz/schnitz-stick/1-serving"],
+  soul: ["o","Soul Origin Product Nutritional Information (17 Sept 2026)","https://www.soulorigin.com.au/collections"],
+  noodle: ["e","Energy (small size) from Noodle Box's menu; protein, carbs and fat estimated","https://noodlebox.com.au/menu"],
+  schnitz: ["o","Schnitz menu nutrition (schnitz.com.au/our-menu); a few salads list energy only","https://schnitz.com.au/our-menu/"],
   dominos: ["d","CalorieKing / FatSecret Australia (per-slice figures doubled)","https://www.calorieking.com/au/en/foods/f/calories-in-pizza-premium-peri-peri-chicken-pizza-classic-crust-base/zmJfh-mXRRuMcHK8HMpnlQ"],
   pizzahut:["d","FatSecret / CalorieCounter Australia","https://m.fatsecret.com.au/calories-nutrition/pizza-hut/hawaiian-pizza-large/1-slice"],
   boost: ["o","Boost Juice Allergens & Nutritional Information (2026)","https://bucket-boostjuice-production-stack.s3.ap-southeast-2.amazonaws.com/BNIPS26-3_Boost+Allergens+%26+Nutritional+Information_Menu+%26+NIPS_Digital_Portrait.pdf"],
   starbucks: ["o","Starbucks Australia product pages (Tall)","https://www.starbucks.com.au/starbucks-our-food-and-nutrition/"],
   zarraffas: ["o","Zarraffa's Coffee product pages","https://zarraffas.com/products"],
-  gongcha: ["e","Energy (kJ) from Gong Cha AU's menu on DoorDash; protein, carbs and fat estimated","https://gongchatea.com.au/menu/"],
-  cafe63:  ["e","No published nutrition info — all figures are estimates from typical portions",null],
-  rashays: ["e","No published nutrition info — all figures are estimates from typical portions",null],
-  bettys:  ["o","Betty's Burgers Nutritional Information (Oct 2022)","https://www.bettysburgers.com.au/bucket/2022/10/BB_Nutritional_Information_OCT22.pdf"],
+  gongcha: ["e","Energy (kJ, regular, standard sugar) from Gong Cha's menu; protein, carbs and fat estimated","https://gongchatea.com.au/menu/"],
+  cafe63: ["e","No published nutrition info — estimates from the dishes on Cafe 63's current menu","https://cafe63.com.au/wp-content/uploads/Cafe63_Newspaper_Menu_YTR-ED2_22.10.24_PR8.pdf"],
+  rashays: ["e","Energy (kJ) printed on Rashays' Aug 2026 menu; protein, carbs and fat estimated","https://rashays.com/dine-in/"],
+  bettys: ["o","Betty's Burgers Main Menu Nutritional Information (22 Sept 2026)","https://www.bettysburgers.com.au/nutritional-and-allergens"],
 };
 const SRC_LABEL = {o:"Official", d:"Database", e:"Estimate"};
 
@@ -314,6 +341,8 @@ const TWEAKS = {
   sf:{l:"Salad instead of chips",d:[-250,-3,-35,-12,2,-300]},
   sh:{l:"Sauce on the side (use half)",d:[-80,0,-2,-8,0,-200]},
 };
+
+Object.assign(TWEAKS,{"nb_gr1": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr2": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr3": {"l": "No bun (Grill'd figures)", "d": [-176, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr4": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr5": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr6": {"l": "No bun (Grill'd figures)", "d": [-161, -4.9, -21.5, -4.7, 0, -253]}, "nb_gr8": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr9": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr10": {"l": "No bun (Grill'd figures)", "d": [-176, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr11": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7, -262]}, "nb_gr12": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr13": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr16": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr17": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr18": {"l": "No bun (Grill'd figures)", "d": [-176, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr19": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7, -262]}, "nb_gr20": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7, -262]}, "nb_gr21": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr22": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7, -262]}, "nb_gr24": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr25": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr26": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr27": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr28": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr29": {"l": "No bun (Grill'd figures)", "d": [-188, -5.4, -20.4, -8.3, 0, 78]}, "nb_gr30": {"l": "No bun (Grill'd figures)", "d": [-176, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr31": {"l": "No bun (Grill'd figures)", "d": [-177, -5.7, -23.5, -5.1, -7.0, -262]}, "nb_gr32": {"l": "No bun (Grill'd figures)", "d": [-176, -5.7, -23.5, -5.1, -7, -262]}});
 
 // [id, chain, name, type, cal, protein, carbs, fat, fibre|null, sodium|null, veg, src, tweaks, tip]
 const RAW = [
@@ -396,21 +425,64 @@ const RAW = [
  ["za6","zamb","Nachos — Grilled Chicken","Main",784,35.9,50.0,48.8,null,1586,0,"o",["ch"],"Definitely one to share."],
  ["za7","zamb","Classic Burrito — Barbacoa Beef","Main",803,37.2,92.6,31.0,null,1846,0,"o",["bw","ch"],"Chicken is slightly lighter."],
 
- // Grill'd — FatSecret AU
- ["gr1","grilld","Bird & Brie (no bun)","Main",371,40.3,12.3,20.2,null,null,0,"d",["ch","my"],"Top high-protein, low-carb burger."],
- ["gr2","grilld","Dynamic Chicken (panini bun)","Main",533,46.2,39,20.4,null,null,0,"d",["nb","my"],"Big protein — go no bun to make it a healthy pick."],
- ["gr3","grilld","Bird & Brie (panini bun)","Main",538,45.7,34.3,24.9,null,null,0,"d",["nb","ch","my"],"Ask for no bun to save ~170 cal."],
- ["gr4","grilld","Simply Grill'd (no bun)","Main",440,22.8,9,28.4,null,null,0,"d",["ch","my"],"Low carb, but beef + mayo keep the fat up."],
- ["gr5","grilld","Simply Grill'd (traditional bun)","Main",600,29.2,36.0,30.5,null,null,0,"d",["nb","ch","my"],"Hold the mayo to save ~90 cal."],
- ["gr6","grilld","Garden Goodness (no bun)","Main",335,7.9,28.9,20.1,null,null,1,"d",["ch","my"],"Light, but low in protein."],
- ["gr7","grilld","Garden Goodness (panini bun)","Main",493,14.1,57.4,21.7,null,null,1,"d",["nb","ch","my"],"Try it bun-free to lighten it."],
- ["gr8","grilld","Snack Slider","Main",268,19.1,21.6,11.1,null,561,0,"d",[],"Great small option — add a side salad."],
- ["gr10","grilld","Simon Says (no bun)","Main",433,48.2,13.3,20.8,null,404,0,"d",["my"],"Highest-protein burger here — great low-carb pick."],
- ["gr11","grilld","Ash Says (traditional bun)","Main",418,30.4,36.2,16.1,null,null,0,"d",["nb"],"Lean chicken burger — a solid all-rounder."],
- ["gr12","grilld","Dynamic Beef Cheeseburger (panini bun)","Main",500,28.8,33.1,20.9,null,null,0,"d",["nb","ch"],"Simple and moderate."],
- ["gr13","grilld","Baa Baa (no bun)","Main",402,20.9,10.1,31.0,null,637,0,"d",["my"],"Lamb is fattier than chicken."],
- ["gr14","grilld","Mighty Melbourne (no bun)","Main",554,31.1,14.8,34.7,null,817,0,"d",["ch","my"],"Bacon, egg and cheese keep the fat high."],
- ["gr9","grilld","Famous Grill'd Chips","Side",335,2.4,39.8,15.8,null,null,1,"d",[],"Share them, or swap for a side salad."],
+ // Grill'd — official Grill'd online menu nutrition panels (Nov 2026), panini bun unless stated
+ ["gr1","grilld","Simply Grill'd","Main",605,28.1,30.9,33.3,7.6,861,0,"o",["nb_gr1"],"Classic beef \u2014 go no bun to cut ~180 cal."],
+ ["gr2","grilld","Crispy Bacon & Cheese","Main",638,30.5,31.9,35.3,7.6,1015,0,"o",["nb_gr2"],"Bacon and cheese add fat and salt."],
+ ["gr3","grilld","Summer Sunset","Main",676,30.2,39.4,36.5,9.3,947,0,"o",["nb_gr3"],"One of the heavier beef burgers."],
+ ["gr4","grilld","Mustard & Pickled!","Main",538,29.2,31,24.8,7.6,1200,0,"o",["nb_gr4"],"Lighter beef option, but salty."],
+ ["gr5","grilld","Chilli Addict","Main",574,30.7,27.9,29.6,7.9,1120,0,"o",["nb_gr5"],"Moderate beef burger."],
+ ["gr6","grilld","Big Queenslander","Main",715,36,36.3,39.4,8.1,1070,0,"o",["nb_gr6"],"Big and rich \u2014 a treat."],
+ ["gr7","grilld","Powerhouse (SuperBun)","Main",717,40,15.7,48.1,6,1090,0,"o",[],"Low carb, but high fat."],
+ ["gr8","grilld","Sweet Chilli Chicken","Main",492,43.1,38.3,16.9,10.2,545,0,"o",["nb_gr8"],"Lean chicken \u2014 no bun makes it a top pick."],
+ ["gr9","grilld","Zen Hen","Main",497,43.1,32.5,19.9,9.2,575,0,"o",["nb_gr9"],"Lean chicken with satay \u2014 great no bun."],
+ ["gr10","grilld","Simon Says","Main",511,43.7,32.4,21.3,9.8,585,0,"o",["nb_gr10"],"Grill'd's most popular \u2014 38 g protein with no bun."],
+ ["gr11","grilld","HotBird","Main",402,42.3,27.2,11.8,9,658,0,"o",["nb_gr11"],"Lightest burger at Grill'd \u2014 225 cal with no bun."],
+ ["gr12","grilld","Bird & Brie","Main",538,45.7,34.3,24.9,8.4,528,0,"o",["nb_gr12"],"Brie adds fat \u2014 still great protein."],
+ ["gr13","grilld","Caesar's Palace","Main",595,55,24.6,29,8.2,576,0,"o",["nb_gr13"],"Huge protein; almost zero carbs with no bun."],
+ ["gr14","grilld","Oscar Piastri Chicken Burger","Main",490,43.4,29.7,22.2,5.7,640,0,"o",[],"Limited-time burger on a charcoal bun."],
+ ["gr15","grilld","Super Nourished (SuperBun)","Main",686,53.4,14.8,45.1,9.3,710,0,"o",[],"Big protein, but avocado + egg mayo add fat."],
+ ["gr16","grilld","Sweet Holy Cluck (HFC)","Main",643,28.4,42.6,32,8.6,1020,0,"o",["nb_gr16"],"Healthy fried \u2014 still heavier than grilled chicken."],
+ ["gr17","grilld","Hula Hen (HFC)","Main",614,26.4,50.4,25.8,8.7,984,0,"o",["nb_gr17"],"Pineapple adds carbs."],
+ ["gr18","grilld","Chipotle (HFC)","Main",578,26.2,39.4,26.9,8.6,1631,0,"o",["nb_gr18"],"Very salty."],
+ ["gr19","grilld","BLAT (HFC)","Main",583,27.3,39.9,26.4,9,1403,0,"o",["nb_gr19"],"Salty \u2014 grilled chicken is leaner."],
+ ["gr20","grilld","Bonfire BBQ (Wagyu)","Main",741,40.2,32.2,48.2,7,1132,0,"o",["nb_gr20"],"Wagyu is rich \u2014 a treat."],
+ ["gr21","grilld","Grand Brie (Wagyu)","Main",696,38.1,36,45.6,7.8,589,0,"o",["nb_gr21"],"Rich \u2014 share the chips."],
+ ["gr22","grilld","Wagyu Wunder","Main",712,38.8,29.1,47.1,7,1142,0,"o",["nb_gr22"],"High fat even with no bun."],
+ ["gr23","grilld","Original Oscar Piastri Wagyu Burger","Main",684,35.6,28.3,47.2,null,747,0,"o",[],"Limited-time \u2014 rich wagyu."],
+ ["gr24","grilld","Baa Baa (Lamb)","Main",571,26.3,32.1,36.2,9.4,908,0,"o",["nb_gr24"],"Lamb is fattier than chicken."],
+ ["gr25","grilld","Zorba the Sheep (Lamb)","Main",662,29.3,32.8,44.6,9.6,1116,0,"o",["nb_gr25"],"High fat \u2014 a treat."],
+ ["gr26","grilld","Garden Goodness","Main",497,16.9,50.5,25,13.1,889,1,"o",["nb_gr26"],"Lots of fibre, low protein."],
+ ["gr27","grilld","Beyond Garden Goodness","Main",545,25.1,42.5,29.5,10.1,773,1,"o",["nb_gr27"],"More protein than the original veggie."],
+ ["gr28","grilld","Beyond Mustard & Pickled!","Main",418,24.5,36.4,17.8,8.4,1034,1,"o",["nb_gr28"],"Lightest veggie burger."],
+ ["gr29","grilld","Vegan Garden Goodness","Main",535,12.2,53.2,28.4,13.1,858,1,"o",["nb_gr29"],"Great fibre, low protein."],
+ ["gr30","grilld","Protein Pro","Main",719,81,32.8,27.4,11.2,691,0,"o",["nb_gr30"],"81 g protein \u2014 the most in the app."],
+ ["gr31","grilld","Cluck Norris","Main",698,79.9,35.6,24.1,10.7,647,0,"o",["nb_gr31"],"Double chicken \u2014 huge protein, moderate fat."],
+ ["gr32","grilld","Big Dill Energy","Main",915,55.7,34,47.1,8,1780,0,"o",["nb_gr32"],"Very high energy and sodium."],
+ ["gr33","grilld","The Classic Wrap","Main",519,24.2,38.9,28.6,5,881,0,"o",[],"Available until 5pm."],
+ ["gr34","grilld","Cali Green Goddess Wrap","Main",490,42.5,39.6,17.3,9.5,519,0,"o",[],"Best wrap \u2014 high protein, lower fat."],
+ ["gr35","grilld","Golden Caesar Wrap","Main",657,34.7,48.9,34.1,7.3,891,0,"o",[],"Heaviest wrap."],
+ ["gr36","grilld","Bacon Club Wrap","Main",705,49.8,41.5,36.3,9.8,916,0,"o",[],"Big protein, big energy."],
+ ["gr37","grilld","The Honey'd Hen Salad","Main",447,41.2,23.3,20.6,5.1,605,0,"o",[],"Great protein for the energy."],
+ ["gr38","grilld","Superpower Salad","Main",459,42.3,21.6,22.4,8.9,529,0,"o",[],"Great protein and fibre."],
+ ["gr39","grilld","Chicken Caesar Salad","Main",576,51.1,14.9,33.9,5.2,688,0,"o",[],"Low carb, high fat from dressing."],
+ ["gr40","grilld","Snack Slider","Main",332,20.2,20.5,17.3,4.9,883,0,"o",[],"Good small option."],
+ ["gr41","grilld","Sliders Pair","Main",385,14.6,27.4,22.9,5.7,622,0,"o",[],"Two small sliders."],
+ ["gr42","grilld","Healthy Fried Chicken Bites (6)","Main",261,23.9,18,10.2,0.6,373,0,"o",[],"Lean snack \u2014 skip the dip."],
+ ["gr43","grilld","Healthy Fried Chicken Bites (9)","Main",390,35.8,27,15.3,0.9,560,0,"o",[],"Solid protein."],
+ ["gr44","grilld","Healthy Fried Chicken Tenders (3)","Main",457,31.2,33.8,21.3,2.3,858,0,"o",[],"Bites are leaner."],
+ ["gr45","grilld","Healthy Fried Chicken Tenders (5)","Main",762,52,56.4,35.5,3.9,1430,0,"o",[],"Share them."],
+ ["gr46","grilld","HFC Julius Caesar Pocket Rocket","Main",416,16.6,31.8,24.5,1.5,560,0,"o",[],"Small but rich."],
+ ["gr47","grilld","Saltbush & Pepper Onion Rings (snack)","Side",208,1.3,22.9,13.1,1.5,120,1,"o",[],"Smallest side."],
+ ["gr48","grilld","Sweet Potato Chips (mini)","Side",220,1.4,25.5,11.8,3,619,1,"o",[],"A small serve."],
+ ["gr49","grilld","Zucchini Chips (mini)","Side",275,3.5,36.1,12.2,1.6,429,1,"o",[],"Not lighter than potato chips."],
+ ["gr50","grilld","Saltbush & Pepper Onion Rings (regular)","Side",332,2.2,37.5,21.1,2.5,197,1,"o",[],"Share them."],
+ ["gr51","grilld","Famous Grill'd Chips (snack)","Side",335,2.4,39.8,15.8,3.8,453,1,"o",[],"The snack size is plenty."],
+ ["gr52","grilld","Sweet Potato Chips (regular)","Side",461,2.9,53.3,24.7,6.3,1090,1,"o",[],"Very salty."],
+ ["gr53","grilld","Famous Grill'd Chips (regular)","Side",588,4.1,69.6,27.8,6.6,696,1,"o",[],"Share them."],
+ ["gr54","grilld","Zucchini Chips (regular)","Side",605,7.7,79.5,26.9,3.5,945,1,"o",[],"Heaviest side."],
+ ["gr55","grilld","Mini Classic Chocolate Shake","Drink",325,6.7,45.8,12.1,0,120,1,"o",[],"Mini size keeps it smaller."],
+ ["gr56","grilld","Velvety Vanilla Shake","Drink",464,10.1,66.5,16.7,null,189,1,"o",[],"Dessert in a cup."],
+ ["gr57","grilld","Classic Chocolate Shake","Drink",557,11.4,78.7,21,null,206,1,"o",[],"Dessert in a cup."],
 
  // Roll'd
  ["ro1","rolld","Tofu Rice Paper Roll (1)","Main",161,4.6,25.4,4.1,null,null,1,"o",[],"Light — 2–3 rolls make a meal."],
@@ -422,15 +494,31 @@ const RAW = [
  ["ro7","rolld","Chicken Vermicelli Noodle Salad","Main",480,28,65,11,4,900,0,"e",[],"Ask for dressing on the side."],
  ["ro8","rolld","Vietnamese Iced Coffee","Drink",190,3,30,6,0,60,1,"e",[],"Condensed milk makes it sweet."],
 
- // Oporto
- ["op1","oporto","Grilled ¼ Chicken","Main",310,40,1,16,0,900,0,"e",["sk"],"Great protein; pair with a salad."],
- ["op2","oporto","Chicken Salad Bowl","Main",450,35,30,20,5,1100,0,"e",["my"],"Ask for dressing on the side."],
- ["op3","oporto","Vegan Bowl","Main",440,17,47.3,14.6,null,null,1,"d",[],"Good fibre-rich plant option."],
- ["op4","oporto","Chicken & Cheese Burger","Main",460,26.3,57.2,22.9,null,null,0,"d",["ch","my"],"Hold the mayo to save ~90 cal."],
- ["op5","oporto","5 Crispy Chicken Strips","Main",540,50.7,24.3,25.9,null,null,0,"d",[],"Lots of protein, but crumbed and fried."],
- ["op6","oporto","Spicy Rice (single)","Side",230,4,41,4.7,null,null,1,"d",[],"Better than chips."],
- ["op7","oporto","Portuguese Salad (single)","Side",90,2,6,6,2,200,1,"e",[],"Swap it for chips in any meal."],
- ["op8","oporto","Regular Chips","Side",412,7.1,52.3,18.2,null,755,1,"d",[],"Go spicy rice or salad instead."],
+ // Oporto — energy from oporto.com.au menu (Nov 2026); macros estimated
+ ["op1","oporto","Quarter Chicken","Main",296,37.0,0.1,16.4,null,900,0,"e",["sk"],"Great protein; pair with a salad. (Energy official; macros estimated.)"],
+ ["op2","oporto","Chicken Tenders (grilled)","Main",381,38.1,23.8,14.8,null,900,0,"e",[],"Grilled, lean protein. (Energy official; macros estimated.)"],
+ ["op3","oporto","Half Chicken","Main",593,74.1,0.1,32.9,null,1700,0,"e",["sk"],"Share it or take half home. (Energy official; macros estimated.)"],
+ ["op4","oporto","Chicken Salad Bowl","Main",610,38.1,45.8,30.5,null,1300,0,"e",["sh"],"Dressing on the side. (Energy official; macros estimated.)"],
+ ["op5","oporto","Pulled Chicken Bowl","Main",573,35.8,57.3,22.3,null,1400,0,"e",["sh"],"Lighter of the two bowls. (Energy official; macros estimated.)"],
+ ["op6","oporto","Chicken Rappa","Main",421,26.3,42.1,16.4,null,1100,0,"e",["my"],"Lightest wrap. (Energy official; macros estimated.)"],
+ ["op7","oporto","Bondi Rappa","Main",641,32.1,56.2,32.0,null,1500,0,"e",["my"],"Hold the mayo. (Energy official; macros estimated.)"],
+ ["op8","oporto","Halloumi & Chicken Rappa","Main",648,35.6,53.5,32.4,null,1600,0,"e",["my"],"Halloumi adds fat. (Energy official; macros estimated.)"],
+ ["op9","oporto","Veggie Rappa","Main",899,22.5,101.0,45.0,null,1500,1,"e",["my"],"Heaviest wrap here. (Energy official; macros estimated.)"],
+ ["op10","oporto","Oprego Burger","Main",540,33.8,54.0,21.0,null,1300,0,"e",["my"],"Lightest burger. (Energy official; macros estimated.)"],
+ ["op11","oporto","O Burger","Main",543,33.9,47.6,24.1,null,1200,0,"e",["my","ch"],"Grilled fillet. (Energy official; macros estimated.)"],
+ ["op12","oporto","Veggie Burger","Main",521,15.6,62.5,23.2,null,1200,1,"e",["my"],"Veggie pick. (Energy official; macros estimated.)"],
+ ["op13","oporto","Bondi Burger","Main",660,33.0,57.8,33.0,null,1500,0,"e",["my","ch"],"Hold the mayo to save ~90 cal. (Energy official; macros estimated.)"],
+ ["op14","oporto","Halloumi & Chicken Burger","Main",700,35.0,61.2,35.0,null,1600,0,"e",["my"],"Halloumi adds fat. (Energy official; macros estimated.)"],
+ ["op15","oporto","Otropo Burger","Main",710,35.5,62.1,35.5,null,1600,0,"e",["my","ch"],"Big burger. (Energy official; macros estimated.)"],
+ ["op16","oporto","Chicken BLT Burger","Main",736,40.5,55.1,39.3,null,1800,0,"e",["my"],"Bacon adds salt and fat. (Energy official; macros estimated.)"],
+ ["op17","oporto","Chicken & Cheese Burger","Main",464,23.2,44.0,21.7,null,1000,0,"e",["ch","my"],"Smaller burger. (Energy official; macros estimated.)"],
+ ["op18","oporto","Crispy Chicken Strips","Main",466,34.9,29.2,23.3,null,1100,0,"e",[],"Crumbed and fried. (Energy official; macros estimated.)"],
+ ["op19","oporto","Portuguese Salad","Side",31,0.8,2.2,2.1,2,150,1,"e",[],"Swap it for chips in any meal. (Energy official; macros estimated.)"],
+ ["op20","oporto","Crunchy Slaw","Side",88,1.1,6.5,6.4,2,200,1,"e",[],"Light side. (Energy official; macros estimated.)"],
+ ["op21","oporto","Grilled Corn","Side",103,2.6,15.5,3.4,4,50,1,"e",[],"Good fibre. (Energy official; macros estimated.)"],
+ ["op22","oporto","Spicy Rice","Side",232,4.6,41.7,5.2,null,500,1,"e",[],"Better than chips. (Energy official; macros estimated.)"],
+ ["op23","oporto","Chips","Side",366,4.6,48.4,17.1,null,700,1,"e",[],"Go spicy rice or salad instead. (Energy official; macros estimated.)"],
+ ["op24","oporto","Spicy Chicken Bolas (regular)","Side",351,15.8,32.4,17.6,null,800,0,"e",[],"Fried snack. (Energy official; macros estimated.)"],
 
  // Hungry Jack's — official nutrition guides (Nov 2026)
  ["hj1","hj","Grilled Chicken Spicy","Main",332,22.4,30.5,14.5,null,723,0,"o",["my"],"Lightest burger at Hungry Jack's."],
@@ -468,30 +556,65 @@ const RAW = [
  ["kf11","kfc","Regular Pepsi Max","Drink",1,0,0.3,0,0,null,1,"o",[],"Zero sugar swap."],
  ["kf12","kfc","Regular Pepsi","Drink",104,0,26,0,0,null,1,"o",[],"Pepsi Max is the sugar-free swap."],
 
- // Red Rooster
- ["rr1","rooster","¼ Chicken (breast)","Main",330,40,1,18,0,900,0,"e",["sk"],"Remove skin to make it a healthy pick."],
- ["rr2","rooster","Fried Chicken (1 piece)","Main",250,18.1,9.0,15.8,null,585,0,"d",[],"Roast is the leaner choice."],
- ["rr3","rooster","Classic Roast (meal)","Main",509,41.9,44.9,14.0,null,2454,0,"d",["sk"],"Great protein, but very high sodium."],
- ["rr4","rooster","Reds Burger","Main",610,25.1,42.6,37.8,null,1245,0,"d",["my"],"Hold the mayo."],
- ["rr5","rooster","Rooster Roll","Main",610,28.6,64.3,25.1,null,null,0,"d",["my"],"Hold the mayo to save ~90 cal."],
- ["rr6","rooster","Garden Salad","Side",50,2,5,2,2,80,1,"e",[],"Lightest side."],
- ["rr7","rooster","Roast Potatoes (regular)","Side",230,4,32,9,3,400,1,"e",[],"Better than chips."],
- ["rr8","rooster","Chips (regular)","Side",380,5,48,18,4,600,1,"e",[],"Roast potatoes save ~150 cal."],
- // McDonald's — FatSecret AU (Big Mac matches McDonald's AU core menu, June 2024)
- ["mc1","mcd","Bacon & Egg McMuffin","Breakfast",290,17.3,25.2,13.0,null,null,0,"d",["ch"],"One of the better breakfast options."],
- ["mc2","mcd","Chicken McNuggets (6)","Main",216,12.1,12.4,13.0,null,383,0,"d",[],"Mind the dipping sauce — some add 50+ cal."],
- ["mc3","mcd","Cheeseburger","Main",306,16.1,28.5,13.1,null,700,0,"d",["ch"],"Pair with water, not a full meal deal."],
- ["mc4","mcd","Chicken McNuggets (10)","Main",360,20.2,20.7,21.7,null,638,0,"d",[],"The 6-pack is the lighter choice."],
- ["mc5","mcd","Quarter Pounder","Main",534,31.3,37.1,28.5,null,1110,0,"d",["ch"],"More protein than a Big Mac for similar calories."],
- ["mc6","mcd","Big Mac","Main",559,25.9,43.8,30.3,null,1090,0,"o",["ch","my"],"Hold the sauce to cut fat."],
- ["mc7","mcd","McChicken","Main",435,17,42,22,2.5,850,0,"e",["my"],"Crumbed patty + mayo — not as light as it sounds (macros estimated from 435 cal)."],
- ["mc8","mcd","Double Quarter Pounder","Main",760,47,37,45,2.5,1429,0,"e",["ch"],"Very high fat — a treat meal."],
- ["mc9","mcd","Sausage & Egg McMuffin","Breakfast",374,21,26,21,1.5,900,0,"e",["ch"],"Bacon & Egg saves ~85 cal (macros estimated from 374 cal)."],
- ["mc10","mcd","Hash Brown","Breakfast",143,1,15,9,1.5,300,1,"e",[],"Adds calories but little protein."],
- ["mc11","mcd","Fries (small)","Side",219,3,28,10.5,2.5,170,1,"e",[],"If you must, go small (macros estimated from 219 cal)."],
- ["mc12","mcd","Fries (medium)","Side",320,4,40,16,3.5,250,1,"e",[],"Small fries save ~100 cal."],
- ["mc13","mcd","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
- ["mc14","mcd","Chocolate Shake (medium)","Drink",420,11,68,11,0,220,1,"e",[],"Dessert in a cup — a treat."],
+ // Red Rooster — energy from redrooster.com.au menu (Nov 2026); macros estimated
+ ["rr1","rooster","Quarter Chicken","Main",282,35.2,0.0,15.7,null,900,0,"e",["sk"],"Remove skin to make it a healthy pick. (Energy official; macros estimated.)"],
+ ["rr2","rooster","Half Chicken","Main",562,70.2,0.1,31.2,null,1700,0,"e",["sk"],"Share it. (Energy official; macros estimated.)"],
+ ["rr3","rooster","Quarter Chicken Combo","Main",363,36.3,18.2,16.1,null,1200,0,"e",["sk"],"Roast with a side — solid choice. (Energy official; macros estimated.)"],
+ ["rr4","rooster","Classic Roast Combo","Main",552,41.4,44.2,23.3,null,2000,0,"e",["sk"],"Great protein, watch the salt. (Energy official; macros estimated.)"],
+ ["rr5","rooster","3 Tenders","Main",234,17.6,14.6,11.7,null,700,0,"e",[],"Small and moderate. (Energy official; macros estimated.)"],
+ ["rr6","rooster","6 Tenders","Main",468,35.1,29.3,23.4,null,1400,0,"e",[],"Share them. (Energy official; macros estimated.)"],
+ ["rr7","rooster","Fried Chicken (1 piece)","Main",251,18.8,9.5,15.3,null,585,0,"e",[],"Roast is the leaner choice. (Energy official; macros estimated.)"],
+ ["rr8","rooster","Fried Chicken Fillet","Main",356,26.7,22.2,17.8,null,900,0,"e",[],"Crumbed. (Energy official; macros estimated.)"],
+ ["rr9","rooster","Chilli Aioli Rippa Roll","Main",476,26.2,45.1,21.2,null,1100,0,"e",["my"],"Lightest roll. (Energy official; macros estimated.)"],
+ ["rr10","rooster","Spicy Burger","Main",488,24.4,48.8,21.7,null,1200,0,"e",["my"],"Lightest burger. (Energy official; macros estimated.)"],
+ ["rr11","rooster","Chicken Mayo Burger","Main",533,24.0,49.4,26.6,null,1100,0,"e",["my"],"Hold the mayo. (Energy official; macros estimated.)"],
+ ["rr12","rooster","Chicken BLT Burger","Main",576,28.8,50.4,28.8,null,1400,0,"e",["my"],"Bacon adds salt. (Energy official; macros estimated.)"],
+ ["rr13","rooster","Rooster Roll","Main",578,28.9,57.8,25.7,null,1300,0,"e",["my"],"Hold the mayo to save ~90 cal. (Energy official; macros estimated.)"],
+ ["rr14","rooster","Reds Burger","Main",586,26.4,49.7,31.3,null,1245,0,"e",["my"],"Hold the mayo. (Energy official; macros estimated.)"],
+ ["rr15","rooster","Flayva Wrap","Main",609,27.4,56.2,30.5,null,1400,0,"e",["my"],"Big wrap. (Energy official; macros estimated.)"],
+ ["rr16","rooster","Cheesy Bacon Burger","Main",676,30.4,54.0,37.6,null,1700,0,"e",["ch","my"],"Indulgent. (Energy official; macros estimated.)"],
+ ["rr17","rooster","Mash & Gravy","Side",74,1.5,11.4,2.5,null,400,1,"e",[],"Surprisingly light side. (Energy official; macros estimated.)"],
+ ["rr18","rooster","Crunchy Slaw","Side",165,1.2,11.2,12.8,null,300,1,"e",[],"Creamy dressing. (Energy official; macros estimated.)"],
+ ["rr19","rooster","Battered Corn Wheels","Side",127,2.5,16.6,5.6,null,300,1,"e",[],"Fried. (Energy official; macros estimated.)"],
+ ["rr20","rooster","Peas","Side",217,8.1,27.2,8.4,6,300,1,"e",[],"More than you'd think — likely buttered. (Energy official; macros estimated.)"],
+ ["rr21","rooster","Sweet Potato","Side",299,3.7,41.1,13.3,null,400,1,"e",[],"Similar to chips. (Energy official; macros estimated.)"],
+ ["rr22","rooster","Chips","Side",323,4.8,42.0,15.1,null,600,1,"e",[],"Mash & gravy saves ~250 cal. (Energy official; macros estimated.)"],
+ // McDonald's — official product nutrition panels on mcdonalds.com/au (Nov 2026)
+ ["mc1","mcd","Hamburger","Main",294,14.2,30.2,12.3,null,678,0,"o",[],"Simple and portion-friendly."],
+ ["mc2","mcd","Cheeseburger","Main",319,15.3,31.0,14.3,null,792,0,"o",["ch"],"Pair with water, not a full meal deal."],
+ ["mc3","mcd","Double Cheeseburger","Main",481,26.2,34.4,25.9,null,1223,0,"o",["ch"],"Good protein, but salty."],
+ ["mc4","mcd","Big Mac","Main",621,28.7,46.5,34.4,null,1119,0,"o",["ch","my"],"Hold the sauce to cut fat."],
+ ["mc5","mcd","Quarter Pounder","Main",545,31.1,37.0,29.2,null,1263,0,"o",["ch"],"More protein than a Big Mac for fewer calories."],
+ ["mc6","mcd","Double Quarter Pounder","Main",844,54.2,37.9,51.6,null,1827,0,"o",["ch"],"Very high fat — a treat meal."],
+ ["mc7","mcd","Big Arch","Main",1101,58.8,57.5,69.2,null,2121,0,"o",["ch"],"Over 1,100 cal — a whole day's sodium."],
+ ["mc8","mcd","Filet-O-Fish","Main",337,14.6,34.6,14.5,null,618,0,"o",["ch"],"One of the lighter burgers."],
+ ["mc9","mcd","McChicken","Main",431,16.2,45.2,19.7,null,652,0,"o",["my"],"Crumbed patty + mayo — not as light as it sounds."],
+ ["mc10","mcd","McSpicy","Main",555,28.1,47.3,26.6,null,1162,0,"o",["my"],"Good protein for a chicken burger."],
+ ["mc11","mcd","McCrispy","Main",636,24.5,55.0,35.1,null,991,0,"o",["my"],"Fried — McSpicy has more protein."],
+ ["mc12","mcd","Chicken 'n' Cheese","Main",418,16.7,39.3,21.0,null,701,0,"o",["ch"],"Moderate."],
+ ["mc13","mcd","Crispy Chicken Snack Wrap","Main",316,12.2,32.2,14.3,null,491,0,"o",["my"],"Small and moderate."],
+ ["mc14","mcd","Spicy Chicken McWrap","Main",585,29.0,51.6,28.3,null,1260,0,"o",["my"],"Decent protein."],
+ ["mc15","mcd","Classic Chicken McWrap","Main",691,23.1,62.1,38.5,null,1137,0,"o",["my"],"Heavier than it looks."],
+ ["mc16","mcd","Chicken McNuggets (6)","Main",229,12.9,14.0,13.4,null,391,0,"o",[],"Mind the dipping sauce — some add 50+ cal."],
+ ["mc17","mcd","Chicken McNuggets (10)","Main",381,21.5,23.3,22.4,null,651,0,"o",[],"The 6-pack is the lighter choice."],
+ ["mc18","mcd","Spicy Chicken McNuggets (10)","Main",402,27.8,18.1,24.0,0,523,0,"o",[],"More protein than regular nuggets."],
+ ["mc19","mcd","Chicken McWings","Main",479,27.5,20.6,30.2,null,1302,0,"o",[],"High fat."],
+ ["mc20","mcd","Bacon & Egg McMuffin","Breakfast",282,17.6,25.3,11.8,null,608,0,"o",["ch"],"One of the best breakfast picks."],
+ ["mc21","mcd","Sausage McMuffin","Breakfast",297,15.9,25.2,14.0,null,540,0,"o",["ch"],"Moderate."],
+ ["mc22","mcd","Sausage & Egg McMuffin","Breakfast",367,21.9,25.5,19.3,null,592,0,"o",["ch"],"Good protein."],
+ ["mc23","mcd","Chicken McMuffin","Breakfast",401,19.2,38.3,18.4,null,705,0,"o",[],"Moderate."],
+ ["mc24","mcd","Brekkie McWrap","Breakfast",446,18.4,36.8,24.4,null,1061,0,"o",[],"Salty for breakfast."],
+ ["mc25","mcd","Big Brekkie Burger","Breakfast",751,39.6,54.0,40.9,null,1504,0,"o",[],"Very big breakfast."],
+ ["mc26","mcd","Mega Brekkie McWrap","Breakfast",786,40.2,53.7,45.2,null,1734,0,"o",[],"A meal and a half."],
+ ["mc27","mcd","Hotcakes with Butter & Syrup","Breakfast",595,9.1,97.1,18.2,null,578,1,"o",[],"Nearly 100 g carbs, little protein."],
+ ["mc28","mcd","Hash Brown","Breakfast",144,1.4,12.5,9.6,0,294,1,"o",[],"Adds calories but little protein."],
+ ["mc29","mcd","Ham & Cheese Toastie","Breakfast",357,19.8,43.6,11.1,null,1150,0,"o",[],"Lower fat, but salty."],
+ ["mc30","mcd","Fries (small)","Side",219,3.5,24.3,11.5,null,210,1,"o",[],"If you must, go small."],
+ ["mc31","mcd","Fries (large)","Side",389,6.1,43.3,20.5,null,374,1,"o",[],"Small fries save ~170 cal."],
+ ["mc32","mcd","Apple Slices","Side",31,0.2,6.4,0.2,null,1,1,"o",[],"Lightest side."],
+ ["mc33","mcd","Banana Bread with Butter","Side",546,7.0,70.3,25.4,null,319,1,"o",[],"More than a burger."],
+ ["mc34","mcd","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+ ["mc35","mcd","Chocolate Shake (medium)","Drink",420,11,68,11,0,220,1,"e",[],"Dessert in a cup — a treat."],
 
  // Fishbowl — FatSecret AU
  ["fb1","fishbowl","Crispy Chicken Bowl (large)","Main",440,32.2,19.6,25.1,null,null,0,"d",["my"],"Lower carb than the rice-based bowls."],
@@ -502,35 +625,100 @@ const RAW = [
  ["fb6","fishbowl","Tofu Boys Bowl (regular)","Main",643,22.9,44.9,38.6,null,null,1,"d",["my"],"Plant-based but high fat — go light on dressing."],
  ["fb7","fishbowl","Braised Beef Warm Bowl (regular)","Main",678,34.5,50.6,34.7,null,null,0,"d",[],"Heaviest bowl here."],
 
- // Soul Origin — FatSecret AU
- ["so1","soul","Grilled Chicken Wrap","Main",384,30,35,13,3,900,0,"e",["my"],"Lightest wrap (macros estimated from 384 cal)."],
- ["so2","soul","Chicken Schnitzel Salad (medium)","Main",409,17.6,22.2,27.8,null,null,0,"d",["my"],"Dressing adds most of the fat."],
- ["so3","soul","Beef Noodle Salad (regular)","Main",433,26.3,65.6,5.6,null,1390,0,"d",[],"Very low fat, but salty."],
- ["so4","soul","Falafel Wrap","Main",483,15.0,61.4,18.6,null,952,1,"d",[],"Good veggie option."],
- ["so5","soul","Chicken Avocado Wrap","Main",507,24.6,36.8,28.1,null,null,0,"d",["my"],"Healthy fats from avo, but a big wrap."],
- ["so6","soul","Chicken Schnitzel Wrap","Main",576,15.2,45.9,36.2,null,null,0,"d",["my"],"The grilled chicken wrap is much lighter."],
- ["so7","soul","Bacon & Egg Wrap","Breakfast",435,20.4,35.5,22.7,null,862,0,"d",["ch"],"Moderate breakfast option."],
- ["so8","soul","Fruit Salad","Side",133,2.5,25.7,0.6,null,53,1,"d",[],"Light and fresh side."],
- ["so9","soul","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+ // Soul Origin — official Product Nutritional Information (17 Sept 2026)
+ ["so1","soul","Summer Chicken Mango Salad (regular)","Main",147,16.6,15.0,1.5,null,658,0,"o",[],"Very light — add a protein side if hungry."],
+ ["so2","soul","Grilled Chicken & Steamed Veg Salad (regular)","Main",136,15.0,8.2,3.6,null,982,0,"o",[],"Super lean. Try the large for more protein."],
+ ["so3","soul","Chicken Avocado Salad (regular)","Main",183,23.4,6.4,6.2,null,1220,0,"o",[],"Low carb, solid protein."],
+ ["so4","soul","Marinated Beef Salad (regular)","Main",191,19.8,20.4,2.5,null,846,0,"o",[],"Lean and filling."],
+ ["so5","soul","Chicken Chorizo Salad (regular)","Main",237,24.7,6.7,11.8,null,1550,0,"o",[],"Low carb but salty."],
+ ["so6","soul","Chicken Caesar Salad (regular)","Main",311,35.4,14.0,11.9,null,1560,0,"o",[],"Top protein salad."],
+ ["so7","soul","Bocconcini Salad (regular)","Main",320,22.6,6.9,22.1,null,1160,1,"o",[],"Veggie, decent protein."],
+ ["so8","soul","Greek Salad (regular)","Side",127,4.1,7.3,8.2,null,498,1,"o",[],"Light side."],
+ ["so9","soul","Green Goddess Salad (regular)","Side",193,7.3,14.9,9.9,null,736,1,"o",[],"Light veggie salad."],
+ ["so10","soul","Beetroot Salad (regular)","Side",287,9.7,21.0,16.0,null,417,1,"o",[],"Veggie side."],
+ ["so11","soul","Beef Noodle Salad (regular)","Main",449,30.1,66.4,5.4,null,1060,0,"o",[],"Low fat, carb heavy."],
+ ["so12","soul","Grilled Chicken Noodle Salad (regular)","Main",442,27.9,57.4,9.9,null,1850,0,"o",[],"High sodium."],
+ ["so13","soul","Chicken Schnitzel Salad (regular)","Main",409,17.6,22.2,27.8,null,794,0,"o",[],"The grilled chicken salads are lighter."],
+ ["so14","soul","Haloumi Salad (regular)","Main",526,22.0,35.6,30.9,null,1220,1,"o",[],"Haloumi is fatty."],
+ ["so15","soul","Chicken Pesto Pasta Salad (regular)","Main",562,24.4,61.2,24.5,null,1190,0,"o",[],"Pasta salads are the heaviest."],
+ ["so16","soul","Falafel Salad (regular)","Main",617,16.3,70.6,27.9,null,1180,1,"o",[],"Heavier than it sounds."],
+ ["so17","soul","Pomegranate & Quinoa Salad (regular)","Main",602,14.8,80.5,21.6,null,912,1,"o",[],"Carb heavy."],
+ ["so18","soul","Grilled Chicken Wrap","Main",385,18.5,35.6,17.6,null,999,0,"o",[],"Lightest wrap."],
+ ["so19","soul","Spinach, Mushroom & Egg Wrap","Breakfast",308,14.1,31.0,12.8,null,684,1,"o",[],"Light veggie wrap."],
+ ["so20","soul","Chicken Avocado Wrap","Main",500,24.7,37.2,26.9,null,1190,0,"o",[],"Healthy fats from avo, but a big wrap."],
+ ["so21","soul","Falafel Wrap","Main",480,15.0,61.2,18.6,null,952,1,"o",[],"Veggie option."],
+ ["so22","soul","Chicken Schnitzel Wrap","Main",516,15.0,45.1,30.0,null,633,0,"o",[],"Grilled chicken wrap is lighter."],
+ ["so23","soul","Grilled Chicken Baguette","Main",588,28.6,73.0,18.7,null,1630,0,"o",[],"Lightest baguette."],
+ ["so24","soul","Chicken Schnitzel Baguette","Main",753,24.3,84.9,34.2,null,1180,0,"o",[],"Very big."],
+ ["so25","soul","Grilled Chicken Panini","Main",504,24.0,51.9,23.7,null,1470,0,"o",[],"Lightest panini."],
+ ["so26","soul","Chicken Avocado Panini","Main",629,30.4,53.7,31.7,null,1680,0,"o",[],"Big and salty."],
+ ["so27","soul","BBQ Steak SO Bun","Main",492,30.5,53.9,16.2,null,799,0,"o",[],"Best of the buns."],
+ ["so28","soul","Crunchy Chicken & Cheese SO Bun","Main",595,26.2,58.5,27.8,null,966,0,"o",["ch"],"Fried chicken."],
+ ["so29","soul","Bacon & Egg Roll","Breakfast",392,16.3,45.3,15.8,null,617,0,"o",[],"Moderate breakfast."],
+ ["so30","soul","Gourmet Brekkie Wrap","Breakfast",612,24.6,40.1,38.3,null,1310,0,"o",[],"Big breakfast."],
+ ["so31","soul","Ham & Cheese Croissant","Breakfast",402,13.5,30.0,25.1,null,620,0,"o",[],"Buttery pastry."],
+ ["so32","soul","Fruit Salad","Side",131,2.1,25.3,0.6,null,43,1,"o",[],"Light and fresh."],
+ ["so33","soul","Banana Bread","Side",495,7.8,74.6,17.0,null,336,1,"o",[],"More like cake."],
+ ["so34","soul","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
 
- // Noodle Box — calories from CalorieCounter AU; macros estimated
- ["nb1","noodle","Tofu & Veg Stir-fry with Rice","Main",520,18,80,14,6,1300,1,"e",["nr"],"Add extra veg for volume."],
- ["nb2","noodle","Japanese Teriyaki Noodles (chicken)","Main",624,35,85,15,5,2000,0,"e",[],"Ask for less sauce to cut sugar and salt."],
- ["nb3","noodle","Chinese Honey Soy Noodles (chicken)","Main",647,35,90,16,5,2100,0,"e",[],"Sweet sauce — ask for light."],
- ["nb4","noodle","Indonesian Satay Noodles (chicken)","Main",732,38,80,28,6,1900,0,"e",[],"Peanut sauce adds fat."],
- ["nb5","noodle","Fragrant Mongolian Noodles (beef)","Main",793,40,90,28,5,2500,0,"e",[],"Very high sodium."],
- ["nb6","noodle","Japanese Crunchy Chicken & Fried Rice","Main",827,35,95,33,3,1800,0,"e",[],"Crumbed and fried — a treat."],
- ["nb7","noodle","Spring Rolls (2)","Side",220,4,26,11,2,350,1,"e",[],"Fried — keep it to one serve."],
+ // Noodle Box — energy (small) from noodlebox.com.au/menu; macros estimated
+ ["nb1","noodle","Special Fried Rice (small)","Main",443,20,59,14,null,null,0,"e",[],"Lightest box. (Energy official, macros estimated.)"],
+ ["nb2","noodle","Nasi Goreng (small)","Main",510,23,66,17,null,null,0,"e",[],"Moderate. (Energy official, macros estimated.)"],
+ ["nb3","noodle","Sesame Garlic Beef (small)","Main",540,30,67,17,null,null,0,"e",["nr"],"Good protein. (Energy official, macros estimated.)"],
+ ["nb4","noodle","Hot and Spicy (small)","Main",541,27,70,17,null,null,0,"e",[],"Spicy and moderate. (Energy official, macros estimated.)"],
+ ["nb5","noodle","Japanese Chicken (small)","Main",554,30,70,17,null,null,0,"e",[],"Good protein. (Energy official, macros estimated.)"],
+ ["nb6","noodle","Black Bean (small)","Main",569,28,74,18,null,null,0,"e",[],"Ask for extra veg. (Energy official, macros estimated.)"],
+ ["nb7","noodle","Combination (small)","Main",585,29,77,18,null,null,0,"e",[],"Mixed meats. (Energy official, macros estimated.)"],
+ ["nb8","noodle","Honey Soy (small)","Main",614,28,87,17,null,null,0,"e",[],"Sweet sauce. (Energy official, macros estimated.)"],
+ ["nb9","noodle","Teriyaki (small)","Main",623,28,90,17,null,null,0,"e",[],"Sweet sauce. (Energy official, macros estimated.)"],
+ ["nb10","noodle","Pad Thai (small)","Main",632,25,84,22,null,null,0,"e",[],"Peanuts add fat. (Energy official, macros estimated.)"],
+ ["nb11","noodle","Kway Teow (small)","Main",702,26,89,27,null,null,0,"e",[],"Oily noodles. (Energy official, macros estimated.)"],
+ ["nb12","noodle","Satay (small)","Main",732,31,78,33,null,null,0,"e",[],"Peanut sauce adds fat. (Energy official, macros estimated.)"],
+ ["nb13","noodle","Sticky Pork Belly (small)","Main",748,26,82,35,null,null,0,"e",[],"Very rich. (Energy official, macros estimated.)"],
+ ["nb14","noodle","Honey Sesame Chicken (small)","Main",760,30,92,30,null,null,0,"e",[],"Crumbed and sweet. (Energy official, macros estimated.)"],
+ ["nb15","noodle","Veg Combination (small)","Main",623,19,90,21,null,null,1,"e",[],"Veggie option. (Energy official, macros estimated.)"],
+ ["nb16","noodle","Veg Teriyaki (small)","Main",636,19,95,20,null,null,1,"e",[],"Veggie option. (Energy official, macros estimated.)"],
+ ["nb17","noodle","Chilli Prawns (small)","Main",493,27,62,15,null,null,0,"e",[],"Lightest noodles. (Energy official, macros estimated.)"],
+ ["nb18","noodle","Chicken Dim Sims (2)","Side",141,6,16,6,null,null,0,"e",[],"Small snack. (Energy official, macros estimated.)"],
+ ["nb19","noodle","BBQ Buns (2)","Side",136,4,21,4,null,null,0,"e",[],"Small snack. (Energy official, macros estimated.)"],
+ ["nb20","noodle","Veggie Spring Rolls (2)","Side",214,4,25,11,null,null,1,"e",[],"Fried — keep it to one serve. (Energy official, macros estimated.)"],
+ ["nb21","noodle","Salt and Pepper Squid","Side",190,10,15,10,null,null,0,"e",[],"Fried snack. (Energy official, macros estimated.)"],
 
- // Schnitz — FatSecret AU
- ["sc1","schnitz","Schnitz Stick","Main",169,18.2,8.0,7.0,null,263,0,"d",[],"Surprisingly lean snack."],
- ["sc2","schnitz","Original Tender (1)","Main",152,11.8,11.2,6.5,null,null,0,"d",[],"Have 2 with a garden salad."],
- ["sc3","schnitz","Schnitzel & Chips","Main",461,22.3,41.1,22.4,null,null,0,"d",[],"Swap the chips for salad."],
- ["sc4","schnitz","3 Pack Tenders","Main",602,35.7,41,32.5,null,null,0,"d",[],"High fat — share or have 2."],
- ["sc5","schnitz","The Swiss (burger)","Main",856,43,70.9,43,null,null,0,"d",["my","ch"],"Big burger — a treat."],
- ["sc6","schnitz","Parma & Chips","Main",897,50.8,78.2,42.2,null,null,0,"d",["ch"],"Very indulgent."],
- ["sc7","schnitz","Small Original Chips","Side",456,6.8,61.3,20.4,null,null,1,"d",[],"Even the small is a big serve."],
- ["sc8","schnitz","Regular Original Chips","Side",542,8.1,72.8,24.4,null,null,1,"d",[],"Share them."],
+ // Schnitz — official figures from schnitz.com.au/our-menu (Nov 2026)
+ ["sc1","schnitz","Mini Basic Instinct burger","Main",373,23.5,34.9,14.9,null,533,0,"o",["my"],"Best pick here: a mini burger with a side salad."],
+ ["sc2","schnitz","Mini American Dream burger","Main",402,25.7,37.5,15.9,null,696,0,"o",["ch"],"Small portion of a classic."],
+ ["sc3","schnitz","Mini Status Quo burger","Main",418,25.4,36.0,18.5,null,652,0,"o",["my"],"Kid-size, adult-friendly."],
+ ["sc4","schnitz","Mini Chip Butty burger","Main",457,25.0,55.3,14.6,null,872,0,"o",[],"Chips in a bun — carb heavy."],
+ ["sc5","schnitz","Original Tender (1)","Main",152,11.8,11.2,6.5,null,350,0,"o",[],"Have 2 with a garden side salad."],
+ ["sc6","schnitz","3 Pack Tenders","Main",602,35.7,41.0,32.5,null,1180,0,"o",[],"Solid protein, but fried."],
+ ["sc7","schnitz","5 Pack Tenders","Main",906,59.3,63.4,45.5,null,1880,0,"o",[],"Share it."],
+ ["sc8","schnitz","Schnuggets 6 Pack","Main",404,20.6,25.1,24.7,null,1060,0,"o",[],"Watch the dipping sauce."],
+ ["sc9","schnitz","Basic Instinct burger","Main",667,45.0,60.7,26.1,null,968,0,"o",["my"],"Lightest full-size burger."],
+ ["sc10","schnitz","Basic Instinct wrap","Main",626,42.6,46.6,29.2,null,904,0,"o",["my"],"Fewer carbs than the burger."],
+ ["sc11","schnitz","Spice of Life wrap","Main",648,46.3,46.7,29.7,null,1050,0,"o",[],"High protein wrap."],
+ ["sc12","schnitz","Spice of Life burger","Main",688,48.7,60.9,26.7,null,1120,0,"o",[],"Spicy and high protein."],
+ ["sc13","schnitz","American Dream wrap","Main",691,47.0,50.7,32.4,null,957,0,"o",["ch"],"High protein."],
+ ["sc14","schnitz","American Dream burger","Main",731,49.4,64.9,29.4,null,1050,0,"o",["ch"],"Big burger."],
+ ["sc15","schnitz","Plain & Simple wrap","Main",703,46.8,47.5,35.4,null,1020,0,"o",[],"Simple, but big."],
+ ["sc16","schnitz","Plain & Simple burger","Main",746,49.4,61.9,32.4,null,1090,0,"o",[],"Big burger."],
+ ["sc17","schnitz","Status Quo burger","Main",760,49.0,64.8,32.8,null,1180,0,"o",["my"],"Big burger."],
+ ["sc18","schnitz","Garden of Eden burger","Main",712,46.0,67.4,27.3,null,1080,0,"o",[],"Plenty of salad, still big."],
+ ["sc19","schnitz","The Swiss burger","Main",789,49.7,64.6,35.5,null,1030,0,"o",["ch"],"Cheesy treat."],
+ ["sc20","schnitz","The Hawaiian burger","Main",791,57.4,72.0,29.7,null,1730,0,"o",["ch"],"Salty."],
+ ["sc21","schnitz","Royal Chip Butty burger","Main",870,48.3,104,28.2,null,1470,0,"o",[],"Over 100 g carbs."],
+ ["sc22","schnitz","The Aussie burger","Main",891,65.6,72.1,37.0,null,1930,0,"o",["ch"],"Huge — a whole day's sodium."],
+ ["sc23","schnitz","OMG burger","Main",961,66.0,72.4,44.2,null,1790,0,"o",["ch"],"The biggest burger here."],
+ ["sc24","schnitz","Nosh Box","Main",380,10.5,41.1,19.3,null,842,0,"o",[],"Low protein for the calories."],
+ ["sc25","schnitz","Small Original Chips","Side",457,6.8,61.3,20.4,null,1130,1,"o",[],"Even the small is a big serve."],
+ ["sc26","schnitz","Regular Original Chips","Side",543,8.1,72.8,24.4,null,1220,1,"o",[],"Share them."],
+ ["sc27","schnitz","Small Sweet Potato Chips","Side",461,2.7,56.6,25.1,null,921,1,"o",[],"Not lighter than regular chips."],
+ ["sc28","schnitz","Schnitzel (plate, no sides)","Main",335,30,20,18,null,600,0,"o",[],"Energy official; macros estimated. Add a garden side salad."],
+ ["sc29","schnitz","Garden Side Salad","Side",82,2,6,7,2,150,1,"o",["sh"],"Energy official; macros estimated."],
+ ["sc30","schnitz","Mediterranean Side Salad","Side",89,3,6,7,2,250,1,"o",["sh"],"Energy official; macros estimated."],
+ ["sc31","schnitz","Garden Salad (with schnitzel)","Main",500,32,25,30,5,900,0,"o",["sh"],"Energy official; macros estimated. Dressing on the side."],
+ ["sc32","schnitz","Mediterranean Salad (with schnitzel)","Main",571,34,28,35,5,1100,0,"o",["sh"],"Energy official; macros estimated."],
+ ["sc33","schnitz","Caesar Salad","Main",750,38,30,55,4,1500,0,"o",["sh"],"Energy official; macros estimated. Caesar dressing is heavy."],
+ ["sc34","schnitz","Parma & Chips","Main",887,50,85,45,6,1900,0,"o",["ch"],"Energy official; macros estimated. Very indulgent."],
 
  // Domino's — CalorieKing / FatSecret AU (per slice × 2, large)
  ["dm1","dominos","Margherita, Thin 'n Crispy (2 slices)","Main",202,8.4,22.6,8.6,null,null,1,"d",[],"Lightest pizza — add a third slice if hungry."],
@@ -550,12 +738,32 @@ const RAW = [
  ["ph4","pizzahut","Ultimate Hot & Spicy (2 slices, large)","Main",532,30,50,24,null,null,0,"d",[],"Spicy meats add fat."],
  ["ph5","pizzahut","Garlic Bread (80 g)","Side",268,8,32,12,null,560,1,"d",[],"Share it."],
 
- // Betty's Burgers — official Oct 2022 nutrition PDF
- ["bb1","bettys","Crispy Strips","Main",406,41.65,18.53,18.53,null,850,0,"o",[],"Surprisingly high protein — skip the dipping sauce."],
- ["bb2","bettys","Crispy Chicken Burger","Main",598,29.25,56.7,27.9,null,1170,0,"d",["nb","my"],"Not lighter than the beef."],
- ["bb3","bettys","Betty's Classic","Main",698,30.7,53.0,40.4,null,1041,0,"o",["nb","ch","my"],"A proper treat burger."],
- ["bb4","bettys","Betty's Deluxe","Main",863,43.4,56.1,51.8,null,1705,0,"o",["nb","ch"],"Very indulgent."],
- ["bb5","bettys","French Fries","Side",358,4.7,46.7,16.7,null,216,1,"o",[],"Share them."],
+ // Betty's Burgers — official Main Menu Nutritional Information (22 Sept 2026)
+ ["bb1","bettys","Grilled Chicken Bare (no bun)","Main",290,31.5,6.51,15.34,null,1071,0,"o",[],"Best pick: high protein, low carb."],
+ ["bb2","bettys","Bare Betty (no bun)","Main",324,24.7,9.18,21.08,null,627,0,"o",[],"Bun-free beef burger."],
+ ["bb3","bettys","Grilled Chicken Burger","Main",397,31.77,26.24,18.24,null,510,0,"o",[],"Lightest full burger."],
+ ["bb4","bettys","Cheeseburger","Main",382,19.27,34.91,18.32,null,633,0,"o",["ch"],"Small classic."],
+ ["bb5","bettys","Crispy Chicken Strips","Main",462,29.75,41.12,19.77,null,721,0,"o",[],"Skip the dipping sauce."],
+ ["bb6","bettys","Betty's Classic","Main",550,28.5,32.94,36.9,null,839,0,"o",["ch"],"A proper treat burger."],
+ ["bb7","bettys","Betty's Classic Plant","Main",557,25.87,38.02,33.52,null,897,1,"o",[],"Plant-based isn't lighter."],
+ ["bb8","bettys","Crispy Chicken","Main",625,29.7,43.12,37.18,null,950,0,"o",[],"Grilled is ~230 cal less."],
+ ["bb9","bettys","Shroom Burger","Main",656,19.7,77.47,33.69,null,1327,1,"o",[],"Heavy veggie option."],
+ ["bb10","bettys","Betty's Deluxe","Main",685,37.97,44,41.5,null,1550,0,"o",["ch"],"Very indulgent."],
+ ["bb11","bettys","Crispy Chicken Supreme","Main",698,33.49,26.2,36.2,null,1240,0,"o",[],"Big."],
+ ["bb12","bettys","Noosa Classic Surf","Main",729,42.46,35.05,46.74,null,1533,0,"o",[],"Surf and turf — very rich."],
+ ["bb13","bettys","Grilled Chicken Supreme","Main",738,39.76,42.58,35.53,null,1669,0,"o",[],"Supreme adds a lot."],
+ ["bb14","bettys","Spicy Chicken","Main",738,43.12,49.84,40.88,null,1685,0,"o",[],"Big and salty."],
+ ["bb15","bettys","Betty's Double","Main",881,59.34,42.78,52.78,null,2066,0,"o",["ch"],"A whole day's sodium."],
+ ["bb16","bettys","Hi-Protein Bowl","Main",505,52.2,12.18,23.13,null,1974,0,"o",[],"Huge protein, low carb — but salty."],
+ ["bb17","bettys","Salmon Bowl","Main",413,23.79,14.84,28.35,null,440,0,"o",[],"Low sodium, healthy fats."],
+ ["bb18","bettys","Calamari","Side",190,13.77,9.52,10.79,null,450,0,"o",[],"Lighter than fries."],
+ ["bb19","bettys","Snack Fries","Side",193,2.42,24.6,10.4,null,270,1,"o",[],"Smallest fries."],
+ ["bb20","bettys","Fries","Side",386,4.91,49.75,18.44,null,547,1,"o",[],"Share them."],
+ ["bb21","bettys","Sweet Potato Fries","Side",338,4.41,46.65,16.44,null,507,1,"o",[],"Slightly lighter than fries."],
+ ["bb22","bettys","Onion Rings","Side",377,3.41,30.1,27.2,null,596,1,"o",[],"High fat."],
+ ["bb23","bettys","Vanilla Shake","Drink",576,17.02,66.97,32.19,null,181,1,"o",[],"A dessert."],
+ ["bb24","bettys","Chocolate Shake","Drink",569,17.39,104.71,13.69,null,185,1,"o",[],"Over 100 g carbs."],
+ ["bb25","bettys","Strawberry Shake","Drink",531,16.43,87.24,17.89,null,178,1,"o",[],"A dessert."],
  // Boost Juice — official 2026 nutrition info (Original 610 mL)
  ["bj1","boost","Wondermelon","Drink",191,13.1,27.3,2.3,6.9,92,1,"o",[],"Lowest calorie protein smoothie — a great pick."],
  ["bj2","boost","Mint Condition Juice","Drink",146,2.0,32.5,0.3,1.5,177,1,"o",[],"Lightest juice on the menu."],
@@ -626,38 +834,81 @@ const RAW = [
  ["zf14","zarraffas","ZBR (Brekkie Roll)","Breakfast",720,39.1,74.7,28.3,null,2250,0,"o",[],"Big and very salty — a whole day's sodium."],
  ["zf15","zarraffas","Banana & Walnut Loaf","Side",458,7.0,63.3,19.0,null,439,1,"o",[],"More calories than it looks."],
 
- // Gong Cha — kJ from Gong Cha AU menu; macros estimated
- ["gc1","gongcha","Alisan Tea","Drink",60,0,15,0,0,10,1,"e",["hs"],"Ask for 0% sugar to make it almost calorie-free."],
- ["gc2","gongcha","Wintermelon Alisan Tea","Drink",94,0,23.5,0,0,10,1,"e",["hs"],"One of the lightest bubble teas."],
- ["gc3","gongcha","Longan Honey Tea","Drink",245,0,61,0,0,10,1,"e",["hs"],"Mostly sugar — go half sugar."],
- ["gc4","gongcha","Milk Foam Green Tea","Drink",288,3,40,13,0,60,1,"e",["hs"],"The foam adds fat — try it without."],
- ["gc5","gongcha","Oolong Milk Tea","Drink",354,2,55,14,0,60,1,"e",["hs"],"Half sugar saves ~60 cal."],
- ["gc6","gongcha","Jasmine Milk Tea","Drink",355,2,55,14,0,60,1,"e",["hs"],"Half sugar saves ~60 cal."],
- ["gc7","gongcha","Thai Mango Smoothie","Drink",401,2,90,3,1,30,1,"e",["hs"],"Very sugary — share or go small."],
- ["gc8","gongcha","Brown Sugar Fresh Milk & Pearls","Drink",402,8,70,10,0,90,1,"e",["np"],"Brown sugar syrup + pearls = a dessert."],
- ["gc9","gongcha","Earl Grey Milk Tea & 3Js","Drink",434,2,75,14,0,70,1,"e",["hs","np"],"Toppings add ~100 cal."],
- ["gc10","gongcha","Royal Pearl Milk Tea","Drink",527,2,90,18,0,80,1,"e",["hs","np"],"Pearls and sugar add up — try 30% sugar, no pearls."],
- // Cafe 63 — estimates (no published nutrition info)
- ["c631","cafe63","Egg White Omelette","Breakfast",300,30,20,10,3,700,1,"e",[],"High protein, low fat — one of the best breakfasts around."],
- ["c632","cafe63","Porridge with Berry Compote","Breakfast",450,12,70,12,7,150,1,"e",[],"Skip the cream and brown sugar to save ~150 cal."],
- ["c633","cafe63","Bacon & Eggs on Toast","Breakfast",600,35,40,32,3,1600,0,"e",[],"Poached eggs and grilled tomato keep it lighter."],
- ["c634","cafe63","Smashed Avo, Smoked Salmon & Poached Eggs","Breakfast",650,35,45,36,8,1400,0,"e",["sh"],"Hollandaise on the side saves ~80 cal."],
- ["c635","cafe63","Potato Rosti Stack, Poached Eggs & Bacon","Breakfast",750,32,55,44,4,1700,0,"e",[],"Rosti is fried — a weekend treat."],
- ["c636","cafe63","Grilled Barramundi, Fries & Veg","Main",700,40,60,32,7,900,0,"e",["sf"],"Swap fries for salad to make it a healthy pick."],
- ["c637","cafe63","Chicken Schnitzel, Mushroom Sauce, Fries & Veg","Main",1100,55,85,58,7,1800,0,"e",["sf","sh"],"Big plate — share the fries or swap for salad."],
- ["c638","cafe63","Rump Steak (200 g), Bacon, Hollandaise, Fries & Salad","Main",1100,60,60,68,6,1600,0,"e",["sf","sh"],"Ask for no bacon and sauce on the side."],
- ["c639","cafe63","Fresh Watermelon Juice","Drink",120,1,28,0.5,1,5,1,"e",[],"Fresh juice, but still ~25 g natural sugar."],
- ["c6310","cafe63","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+ // Gong Cha — energy (regular size) from gongchatea.com.au/menu (Nov 2026); macros estimated
+ ["gc1","gongcha","Black Tea (R)","Drink",63,0.0,15.8,0.0,0,40,1,"e",["hs"],"Ask for 0% sugar to make it almost calorie-free. (Energy official; macros estimated.)"],
+ ["gc2","gongcha","Green Tea (R)","Drink",63,0.0,15.8,0.0,0,40,1,"e",["hs"],"Ask for 0% sugar. (Energy official; macros estimated.)"],
+ ["gc3","gongcha","Alisan Tea (R)","Drink",61,0.0,15.2,0.0,0,40,1,"e",["hs"],"Ask for 0% sugar. (Energy official; macros estimated.)"],
+ ["gc4","gongcha","Plum Green Tea (R)","Drink",67,0.0,16.8,0.0,0,40,1,"e",["hs"],"One of the lightest. (Energy official; macros estimated.)"],
+ ["gc5","gongcha","Wintermelon Alisan Tea (R)","Drink",94,0.0,23.5,0.0,0,40,1,"e",["hs"],"Light bubble-tea-shop pick. (Energy official; macros estimated.)"],
+ ["gc6","gongcha","Old Style Plum Tea (R)","Drink",100,0.0,25.0,0.0,0,40,1,"e",["hs"],"Light. (Energy official; macros estimated.)"],
+ ["gc7","gongcha","Honey Green Tea (R)","Drink",126,0.0,31.5,0.0,0,40,1,"e",["hs"],"Mostly sugar — go half. (Energy official; macros estimated.)"],
+ ["gc8","gongcha","Grape Green Tea & Basil Seeds (R)","Drink",130,0.0,32.5,0.0,0,40,1,"e",["hs"],"Fruit tea — go half sugar. (Energy official; macros estimated.)"],
+ ["gc9","gongcha","Mango Alisan Tea (R)","Drink",132,0.0,33.0,0.0,0,40,1,"e",["hs"],"Fruit tea — go half sugar. (Energy official; macros estimated.)"],
+ ["gc10","gongcha","Peach Green Tea (R)","Drink",134,0.0,33.5,0.0,0,40,1,"e",["hs"],"Fruit tea — go half sugar. (Energy official; macros estimated.)"],
+ ["gc11","gongcha","Lychee Oolong & Aloe (R)","Drink",147,0.0,36.8,0.0,0,40,1,"e",["hs"],"Aloe adds sugar. (Energy official; macros estimated.)"],
+ ["gc12","gongcha","Wintermelon Tea Latte (R)","Drink",150,1.9,30.0,2.5,0,40,1,"e",["hs"],"Lightest milky drink. (Energy official; macros estimated.)"],
+ ["gc13","gongcha","Green Tea Yoghurt (R)","Drink",165,3.3,33.9,1.8,0,40,1,"e",["hs"],"Yoghurt adds some protein. (Energy official; macros estimated.)"],
+ ["gc14","gongcha","Milk Foam Green Tea (R)","Drink",211,1.6,30.0,9.4,0,40,1,"e",["hs"],"The foam adds fat — try it without. (Energy official; macros estimated.)"],
+ ["gc15","gongcha","Matcha Latte (R)","Drink",244,4.9,37.9,8.1,0,40,1,"e",["hs"],"Half sugar helps. (Energy official; macros estimated.)"],
+ ["gc16","gongcha","Oolong Milk Tea (R)","Drink",248,1.9,41.4,8.3,0,40,1,"e",["hs"],"Half sugar saves ~60 cal. (Energy official; macros estimated.)"],
+ ["gc17","gongcha","Taro Milk Tea (R)","Drink",249,1.9,41.7,8.3,0,40,1,"e",["hs"],"Half sugar helps. (Energy official; macros estimated.)"],
+ ["gc18","gongcha","Earl Grey Milk Tea & 3Js (R)","Drink",321,2.4,57.8,8.9,0,40,1,"e",["hs","np"],"Toppings add ~100 cal. (Energy official; macros estimated.)"],
+ ["gc19","gongcha","Pearl Milk Tea (R)","Drink",398,2.0,72.5,11.1,0,40,1,"e",["hs","np"],"Pearls and sugar add up — try 30% sugar, no pearls. (Energy official; macros estimated.)"],
+ ["gc20","gongcha","Mango Smoothie (R)","Drink",321,1.6,74.6,1.8,0,40,1,"e",["hs"],"Very sugary — share it. (Energy official; macros estimated.)"],
+ ["gc21","gongcha","Cookie Choco Smoothie (R)","Drink",406,4.1,67.0,13.5,0,40,1,"e",[],"Dessert in a cup. (Energy official; macros estimated.)"],
+ // Cafe 63 — estimates from the current menu (no published nutrition info)
+ ["c631","cafe63","Super Brat (egg white omelette, spinach, mushrooms, toast)","Breakfast",320,28,26,10,4,600,1,"e",[],"One of the lightest breakfasts around."],
+ ["c632","cafe63","Cathy Freeman (egg white omelette, chicken 200 g, feta, spinach, toast)","Breakfast",560,68,28,18,3,1100,0,"e",[],"Huge protein — the best pick here."],
+ ["c633","cafe63","Barty (omelette, spinach, tomato, onion, mushrooms, toast)","Breakfast",470,26,28,28,4,700,1,"e",[],"Ask for the half serve to save ~150 cal."],
+ ["c634","cafe63","Stephanie Rice (omelette, chicken, feta, spinach, toast)","Breakfast",650,62,28,32,3,1200,0,"e",[],"Great protein; half serve is lighter."],
+ ["c635","cafe63","Full House (omelette, cheese, bacon, hash browns, toast)","Breakfast",900,42,55,56,4,1900,0,"e",[],"Big and salty — go half serve."],
+ ["c636","cafe63","Carbon Tax (scrambled eggs, sausages, cheese, hash browns, toast)","Breakfast",1050,45,60,70,4,2100,0,"e",[],"A weekend treat."],
+ ["c637","cafe63","Candle in the Wind (Benny with grilled chicken)","Breakfast",680,45,40,38,2,1300,0,"e",["sh"],"Hollandaise on the side saves ~100 cal."],
+ ["c638","cafe63","Crocodile Rock (Benny with avocado)","Breakfast",620,22,40,42,6,1000,1,"e",["sh"],"Hollandaise on the side."],
+ ["c639","cafe63","Alan Bond (granola, Greek yoghurt, raspberries)","Breakfast",420,18,55,14,7,100,1,"e",[],"Good protein from the yoghurt."],
+ ["c6310","cafe63","Ben Lexcen (porridge, fresh raspberries)","Breakfast",320,11,52,7,8,100,1,"e",[],"Light and high fibre."],
+ ["c6311","cafe63","Shooter (Bircher 200 g, berry compote, yoghurt, macadamias)","Breakfast",480,15,60,20,7,80,1,"e",[],"Nuts add healthy fats."],
+ ["c6312","cafe63","Jumping Frog (pumpkin soup, Turkish bread)","Main",420,11,60,14,6,1100,1,"e",[],"Light lunch."],
+ ["c6313","cafe63","Rooster (Cajun chicken salad, full)","Main",480,55,15,22,5,1100,0,"e",["sh"],"High protein, low carb."],
+ ["c6314","cafe63","Paper White (smoked salmon salad)","Main",420,22,15,30,6,1300,0,"e",["sh"],"Healthy fats; dressing on the side."],
+ ["c6315","cafe63","Julius (chicken Caesar, full)","Main",720,58,25,42,3,1600,0,"e",["sh"],"Dressing on the side; half serve available."],
+ ["c6316","cafe63","Tuber (grilled salmon, mash, carrots, yoghurt)","Main",720,42,45,40,6,700,0,"e",[],"Good balanced meal."],
+ ["c6317","cafe63","Andes (grilled chicken 200 g, mushroom sauce, mash, carrots)","Main",780,62,50,34,6,1200,0,"e",["sh"],"Great protein; sauce on the side."],
+ ["c6318","cafe63","Ashes (Cajun salmon, sweet potato fries, slaw)","Main",900,40,70,50,8,1000,0,"e",["sf"],"Swap the fries for salad."],
+ ["c6319","cafe63","Barry & Chips (battered fish, fries)","Main",880,30,85,46,6,1100,0,"e",["sf"],"Battered and fried."],
+ ["c6320","cafe63","Green & Gold Burger (with fries)","Main",1050,42,85,58,6,1700,0,"e",["sf"],"Swap fries for salad to save ~300 cal."],
+ ["c6321","cafe63","Dresden (chicken schnitzel, slaw, fries)","Main",1100,50,90,58,7,1600,0,"e",["sf"],"Big plate — share the fries."],
+ ["c6322","cafe63","Halley of Yeppoon (chicken parmigiana, slaw, fries)","Main",1250,62,95,66,7,2100,0,"e",["sf"],"Very indulgent."],
+ ["c6323","cafe63","Flat White (regular)","Drink",140,7.5,10.5,7.5,0,100,1,"e",["sm"],"Skim milk saves ~50 cal."],
+ ["c6324","cafe63","Milk Shake (regular)","Drink",480,13,70,16,0,250,1,"e",[],"Dessert in a cup."],
 
- // Rashays — estimates (no published nutrition info)
- ["rs1","rashays","Feta Garden Salad (side)","Side",250,8,10,20,4,600,1,"e",["sh"],"Dressing on the side helps."],
- ["rs2","rashays","Grilled Barramundi, Mash & Veg","Main",600,40,45,26,6,1100,0,"e",[],"Lightest main — a solid choice."],
- ["rs3","rashays","Original Rashays Chicken, Mash & Veg","Main",750,50,55,35,6,1500,0,"e",["sh"],"Mash & veg is lighter than chips & salad."],
- ["rs4","rashays","New York Steak, Mash & Veg","Main",800,55,45,42,6,1200,0,"e",["sh"],"Great protein — go easy on the sauce."],
- ["rs5","rashays","180 g Steak & Chips","Main",850,45,65,45,6,1100,0,"e",["sf"],"Swap chips for salad to save ~250 cal."],
- ["rs6","rashays","Original Rashays Chicken, Chips & Salad","Main",900,50,75,45,6,1600,0,"e",["sf","sh"],"Ask for mash & veg instead of chips."],
- ["rs7","rashays","Fish & Chips","Main",1000,35,90,55,6,1400,0,"e",["sf"],"Battered and fried — grilled barramundi is far lighter."],
- ["rs8","rashays","Chicken Fettuccine","Main",1100,45,95,60,4,1700,0,"e",[],"Creamy pasta — share it or save it for a treat."],
+ // Rashays — energy from the Aug 2026 menu; macros estimated
+ ["rs1","rashays","Smashed Avo & Eggs","Breakfast",528,23.8,42.3,29.3,8,900,1,"e",[],"Good fats; ask for less feta. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs2","rashays","Eggs on Sourdough","Breakfast",546,24.6,50.5,27.3,3,1000,1,"e",[],"Skip the hash browns to save ~250 cal. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs3","rashays","Eggs Benny","Breakfast",714,32.1,48.3,43.6,3,1300,0,"e",["sh"],"Hollandaise on the side. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs4","rashays","Brekkie Burger","Breakfast",787,39.4,62.8,42.0,3,1500,0,"e",[],"Big breakfast. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs5","rashays","Veggie Brekkie","Breakfast",867,32.5,75.8,48.2,8,1500,1,"e",[],"Haloumi and hash browns add up. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs6","rashays","Big Brekkie","Breakfast",1103,55.2,77.2,63.7,6,2200,0,"e",[],"Share it — over 1,000 cal. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs7","rashays","Bruschetta","Side",292,8.8,42.4,9.7,3,500,1,"e",[],"Light starter. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs8","rashays","Chicken & Avo Salad","Main",549,41.2,27.4,30.5,7,900,0,"e",["sh"],"Lightest main here — dressing on the side. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs9","rashays","Lamb Greek Salad","Main",565,39.6,24.0,34.5,6,1100,0,"e",["sh"],"Good protein, feta adds fat. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs10","rashays","Grilled Chicken Caesar","Main",856,53.5,42.8,52.3,4,1700,0,"e",["sh"],"Caesar dressing is heavy — have it on the side. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs11","rashays","Angus Beef Lasagne","Main",829,41.5,72.4,41.5,4,1500,0,"e",[],"Rich — share a side salad. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs12","rashays","Creamy Chicken Pasta","Main",835,41.8,72.9,41.8,3,1500,0,"e",[],"Creamy pasta — a treat. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs13","rashays","200 g Sirloin (with 2 sides)","Main",1106,69.1,83.0,55.3,6,1300,0,"e",["sf","sh"],"Pick salad + veg as your sides to cut ~400 cal. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs14","rashays","300 g Sirloin (with 2 sides)","Main",1375,92.8,96.2,68.8,6,1500,0,"e",["sf","sh"],"Pick salad + veg as sides. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs15","rashays","Original Rashays Chicken (with 2 sides)","Main",1233,77.1,77.0,68.5,6,1800,0,"e",["sf","sh"],"Pick salad + steamed veg as sides. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs16","rashays","Schnitzel Overload (with 2 sides)","Main",1370,75.3,102.7,73.1,5,2200,0,"e",["sf"],"Crumbed + cheese — a treat. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs17","rashays","Battered Fish (with 2 sides)","Main",1312,49.2,114.8,72.9,5,1600,0,"e",["sf"],"Battered and fried. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs18","rashays","Wagyu Scotch Fillet (with 2 sides)","Main",1610,88.5,92.6,98.4,6,1500,0,"e",["sf","sh"],"Wagyu is very fatty. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs19","rashays","T-Bone 450 g (with 2 sides)","Main",1743,108.9,100.3,100.7,6,1700,0,"e",["sf","sh"],"Huge — share it. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs20","rashays","Margherita Pizza","Main",1029,38.6,128.7,40.0,5,2200,1,"e",[],"Share a pizza between two. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs21","rashays","Peri Chicken Pizza","Main",1288,58.0,141.6,54.4,5,2600,0,"e",[],"Share it. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs22","rashays","Meat Lovers Pizza","Main",1291,54.9,132.4,60.2,4,3000,0,"e",[],"Very salty — share it. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs23","rashays","Garden Salad (side)","Side",90,1.3,7.7,6.0,3,200,1,"e",["sh"],"Lightest side. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs24","rashays","Steamed Vegetables (side)","Side",201,5.0,22.5,10.1,6,250,1,"e",[],"Good second side. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs25","rashays","Creamy Mashed Potato (side)","Side",249,3.7,30.6,12.4,3,400,1,"e",[],"Lighter than chips. (Energy from Rashays' menu; macros estimated.)"],
+ ["rs26","rashays","Onion Rings (side)","Side",477,6.0,53.6,26.5,3,700,1,"e",[],"Fried. (Energy from Rashays' menu; macros estimated.)"],
 ];
 
 // Standard bottled drinks for every chain (label-based estimates)
@@ -711,6 +962,50 @@ function applyTweaks(base, tw){
 // Daily reference values (Australian guides)
 const DAY = {kj:8700, cal:2080, na:2000, fib:30};
 
+// ================= CRAVINGS & DISLIKES =================
+const RX = {
+  chicken:/chicken|chook|tender|nugget|schnit|wing|mcchicken|mccrispy|mcspicy|zinger|popcorn|parma|rappa|schnugget|bolas|chick'n|birdie|rooster roll|rippa|flayva|chilli aioli|o burger|oprego|bondi|otropo|crispy strips|halley|dresden|andes/i,
+  beef:/beef|steak|sirloin|scotch|t-bone|wagyu|rib fillet|asado|brisket|bulgogi|mince|bolognese|lasagne|angus|big mac|whopper|quarter pounder|cheeseburger|hamburger|big arch|bare betty|betty's classic|betty's deluxe|betty's double|cunnamulla|meat lovers|barbacoa|green & gold/i,
+  fish:/fish|salmon|prawn|tuna|barra|calamari|squid|seafood|hoki|surf|poke|crab|mussel|scallop|anchov/i,
+  pork:/pork|bacon|\bham\b|chorizo|salami|pepperoni|prosciutto|sausage|pancetta|mortadella|carnitas|bbq buns|wonton|blt|meat lovers|hawaiian|supreme/i,
+  lamb:/lamb|souvlaki|gyro/i,
+  cheese:/chees|parm|haloumi|halloumi|feta|bocconcini|mozzarella|cheddar|swiss|margherita|pizza|quesadilla|caesar|nachos|toastie|lasagne/i,
+  egg:/\begg|omelette|benny|frittata|mcmuffin|brekkie|scrambled|eggs/i,
+  avo:/avo|guac/i,
+  mushroom:/mushroom|shroom/i,
+  spicy:/spicy|\bhot\b(?! chocolate)|chilli|chili|peri|jalape|zinger|cajun|firecracker|nashville|sriracha|buffalo|hot and spicy|hot honey|reds hot/i,
+  dairy:/milk|latte|chees|cream|yoghurt|yogurt|shake|butter|cappuccino|flat white|mocha|ice cream|frapp|parm|feta|haloumi|halloumi|mozzarella|bocconcini|custard|cheesecake|caesar|pizza|toastie/i,
+  nuts:/\bnut|peanut|satay|almond|cashew|macadamia|walnut|pecan|pistachio|hazelnut|nutella|pad thai/i,
+  mayo:/mayo|aioli/i,
+  onion:/onion/i,
+  tofu:/tofu|plant|vegan|falafel/i,
+};
+const CRAVES = [
+  {k:"chicken",l:"Chicken",i:"🍗",t:it=>RX.chicken.test(it.name) || (["nandos","kfc","oporto","rooster","schnitz"].includes(it.chain) && it.type==="Main" && !RX.beef.test(it.name) && !RX.fish.test(it.name) && !it.veg)},
+  {k:"salad",l:"Salad",i:"🥗",t:it=>/salad|slaw|lettuce|bare|naked|no bun/i.test(it.name) && it.type!=="Drink"},
+  {k:"beef",l:"Steak & beef",i:"🥩",t:it=>RX.beef.test(it.name)},
+  {k:"burger",l:"Burger",i:"🍔",t:it=>it.type!=="Drink" && (/burger|whopper|big mac|quarter pounder|mcchicken|mccrispy|mcspicy|filet-o|big arch|slider|zinger|\bbun\b|stacker|jack's/i.test(it.name) || (["grilld","bettys"].includes(it.chain)&&it.type==="Main"&&!/bowl|strip|calamari|salad/i.test(it.name)))},
+  {k:"wrap",l:"Wrap & sandwich",i:"🌯",t:it=>it.type!=="Drink" && (/wrap|burrito|rappa|\broll\b|pita|kebab|quesadilla|baguette|\bsub\b|panini|toastie|sandwich|footlong|6-inch|six inch|taco|croissant|rippa|ciabatta|toasted/i.test(it.name) || (it.chain==="subway"&&it.type==="Main"))},
+  {k:"bowl",l:"Bowls, rice & noodles",i:"🍜",t:it=>it.type!=="Drink" && (/bowl|poke|rice|noodle|stir|nasi|pad thai|teriyaki|satay|kway|black bean|combination|honey soy|hot and spicy|sesame|box\b/i.test(it.name) || it.chain==="noodle" && it.type==="Main")},
+  {k:"pizza",l:"Pizza",i:"🍕",t:it=>/pizza|margherita/i.test(it.name) || (["dominos","pizzahut"].includes(it.chain)&&it.type==="Main")},
+  {k:"pasta",l:"Pasta",i:"🍝",t:it=>/pasta|lasagne|fettuccine|spaghetti|penne|carbonara|gnocchi|bolognese/i.test(it.name)},
+  {k:"fish",l:"Fish & seafood",i:"🐟",t:it=>it.type!=="Drink" && RX.fish.test(it.name)},
+  {k:"veg",l:"Veggie",i:"🥦",t:it=>it.veg && it.type!=="Drink" && !/chips|fries|hash brown|onion rings|_w$/i.test(it.name)},
+  {k:"brekkie",l:"Breakfast",i:"🍳",t:it=>it.type==="Breakfast"},
+  {k:"light",l:"Light snack",i:"🥨",t:it=>it.type!=="Drink" && it.cal<=300},
+  {k:"coffee",l:"Coffee",i:"☕",t:it=>it.type==="Drink" && /latte|flat white|cappuccino|coffee|mocha|macchiato|espresso|americano|long black|frapp|piccolo|cold brew|fusion/i.test(it.name)},
+  {k:"tea",l:"Tea & bubble tea",i:"🧋",t:it=>it.type==="Drink" && (it.chain==="gongcha" || /\btea\b|chai|matcha/i.test(it.name))},
+  {k:"smoothie",l:"Smoothie, juice & shake",i:"🥤",t:it=>it.type==="Drink" && (it.chain==="boost" || /smoothie|juice|shake|crush|blend|frapp/i.test(it.name))},
+  {k:"sweet",l:"Something sweet",i:"🍰",t:it=>/cake|cookie|brownie|muffin|donut|churro|sundae|mcflurry|ice cream|banana bread|loaf|waffle|pancake|hotcake|mousse|fritter|slice|crepe|custard|pie\b|dessert|shake/i.test(it.name)},
+];
+const CRAVE_BY = Object.fromEntries(CRAVES.map(c=>[c.k,c]));
+const DISLIKES = [
+  ["fish","Fish & seafood","🐟"],["pork","Pork, ham & bacon","🥓"],["beef","Beef","🐄"],["lamb","Lamb","🐑"],["chicken","Chicken","🐔"],
+  ["cheese","Cheese","🧀"],["dairy","Dairy & milk","🥛"],["egg","Egg","🥚"],["avo","Avocado","🥑"],["mushroom","Mushroom","🍄"],
+  ["onion","Onion","🧅"],["spicy","Spicy & chilli","🌶️"],["nuts","Nuts & satay","🥜"],["mayo","Mayo & aioli","🫙"],["tofu","Tofu & plant-based","🌱"],
+];
+const DIS_LABEL = Object.fromEntries(DISLIKES.map(([k,l])=>[k,l]));
+
 // ================= STATE =================
 const store = {
   get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
@@ -725,6 +1020,21 @@ let chain = "all", tab = "at", query = "", atQuery = "";
 let sort = store.get("tm_sort","health");
 let atChain = store.get("tm_at",null);
 let detail = null; // {id, tw:Set}
+let crave = store.get("tm_crave","all"); if(crave!=="all" && !CRAVE_BY[crave]) crave="all";
+let dislikes = new Set(store.get("tm_dislikes",[]).filter(k=>RX[k]));
+let customWords = store.get("tm_custom","");
+let hiddenIds = new Set(store.get("tm_hidden",[]).filter(id=>BY_ID[id]));
+function customList(){ return customWords.split(",").map(w=>w.trim().toLowerCase()).filter(w=>w.length>=2); }
+function isHidden(it){
+  if (hiddenIds.has(it.id)) return true;
+  if (/_w$/.test(it.id)) return false;
+  for (const k of dislikes){ if (RX[k].test(it.name)) return true; }
+  const nm=it.name.toLowerCase();
+  return customList().some(w=>nm.includes(w));
+}
+const visible = it=>!isHidden(it);
+function craves(it,k=crave){ return k==="all" || CRAVE_BY[k].t(it); }
+function hideCount(){ return dislikes.size + customList().length + hiddenIds.size; }
 
 // ================= HELPERS =================
 const $ = s=>document.querySelector(s);
@@ -769,9 +1079,11 @@ function filtersActive(f){ return Object.keys(DEFAULT_F).some(k=>f[k]!==DEFAULT_
 function applyAll(list, f=filters, useFilters=true){
   const q=query.trim().toLowerCase();
   return list.filter(it=>{
+    if (isHidden(it)) return false;
     if (chain!=="all" && it.chain!==chain) return false;
     if (q && !(it.name.toLowerCase().includes(q) || CHAINS[it.chain].name.toLowerCase().includes(q))) return false;
     if (!useFilters) return true;
+    if (!craves(it)) return false;
     if (f.rating!=="all" && it.rating!==f.rating) return false;
     if (f.type!=="all" && it.type!==f.type) return false;
     if (it.cal>f.maxCal) return false;
@@ -804,6 +1116,28 @@ function renderChips(){
   $("#chainChips").innerHTML = opts.map(([k,l,ic])=>`<button class="chip ${chain===k?"active":""}" data-chain="${k}">${ic?`<span aria-hidden="true">${ic}</span>`:""}${l}</button>`).join("");
 }
 
+function renderCraves(){
+  const n=hideCount();
+  $("#craveChips").innerHTML = [`<button class="chip ${crave==="all"?"active":""}" data-crave="all">Anything</button>`,
+    ...CRAVES.map(c=>`<button class="chip ${crave===c.k?"active":""}" data-crave="${c.k}"><span aria-hidden="true">${c.i}</span>${c.l}</button>`),
+    `<button class="chip hide-chip ${n?"on":""}" data-dislikes><span aria-hidden="true">🚫</span>${n?`Hiding ${n}`:"Hide what I don't like"}</button>`].join("");
+}
+function hideNote(){
+  const parts=[...[...dislikes].map(k=>DIS_LABEL[k]), ...customList().map(w=>`“${w}”`)];
+  if(hiddenIds.size) parts.push(`${hiddenIds.size} item${hiddenIds.size===1?"":"s"}`);
+  return parts.length?`<p class="hide-note">Hiding ${esc(parts.join(", "))} · <button data-dislikes>Edit</button></p>`:"";
+}
+function renderDislikeSheet(){
+  $("#dlChips").innerHTML = DISLIKES.map(([k,l,i])=>`<button class="chip ${dislikes.has(k)?"active":""}" data-dl="${k}"><span aria-hidden="true">${i}</span>${l}</button>`).join("");
+  if (document.activeElement!==$("#dlCustom")) $("#dlCustom").value = customWords;
+  const hid=[...hiddenIds].map(id=>BY_ID[id]);
+  $("#dlHidden").innerHTML = hid.length? hid.map(it=>`<div class="hl"><span>${CHAINS[it.chain].icon}</span><div class="grow">${esc(it.name)}<small>${CHAINS[it.chain].name}</small></div><button class="link-btn" data-unhide="${it.id}">Show again</button></div>`).join("")
+    : `<p class="section-p" style="margin:0">None yet. Open any item and tap <b>Hide this item</b>.</p>`;
+  const tot=ITEMS.filter(isHidden).length;
+  $("#dlDone").textContent = tot?`Done · ${tot} item${tot===1?"":"s"} hidden`:"Done";
+}
+function saveDislikes(){ store.set("tm_dislikes",[...dislikes]); store.set("tm_custom",customWords); store.set("tm_hidden",[...hiddenIds]); }
+
 // ---- meal totals ----
 function lineItem(l){ return applyTweaks(BY_ID[l.id], l.tw); }
 function totals(lines){
@@ -830,7 +1164,11 @@ function summaryCard(t, label){
 
 // ---- I'm at: best picks ----
 function bestFor(k){
-  const items=ITEMS.filter(i=>i.chain===k);
+  const all=ITEMS.filter(i=>i.chain===k && visible(i));
+  const cr=all.filter(i=>craves(i));
+  const grp=t=>t==="Breakfast"?"Main":t;
+  const crGroups=new Set(cr.map(i=>grp(i.type)));
+  const items = (crave!=="all" && cr.length) ? all.filter(i=>!crGroups.has(grp(i.type)) || craves(i)) : all;
   const best=(type)=>sortList(items.filter(i=>i.type===type),"health");
   let mains=sortList(items.filter(i=>i.type==="Main"||i.type==="Breakfast"),"health").slice(0,3);
   if(!mains.length) return {mains:[], side:null, drink:null, drinks:best("Drink").slice(0,5)};
@@ -842,10 +1180,13 @@ function bestFor(k){
 // ================= RENDER =================
 function render(){
   $("#filterBtn").classList.toggle("on", filtersActive(filters));
+  const cl = crave!=="all" ? CRAVE_BY[crave] : null;
   const listTabs = tab==="browse"||tab==="favs";
   $("#searchRow").style.display = (listTabs||tab==="at")?"flex":"none";
   $("#q").placeholder = tab!=="at" ? "Search menu items" : atChain ? `Search the ${CHAINS[atChain].name} menu` : "Search chains or menu items";
   $("#chainChips").style.display = listTabs?"flex":"none";
+  $("#craveWrap").style.display = (tab==="browse"||tab==="at")?"block":"none";
+  renderCraves();
   $("#filterBtn").style.display = tab==="browse"?"grid":"none";
   const titles={browse:["Takeaway Macros","Find the healthier order, fast"],at:["I'm at…","Your best orders, right now"],meal:["Meal builder","Add items to see your totals"],favs:["Favourites","Your saved go-to orders"],about:["Guide","Ratings, sources & install"]};
   $("#pageTitle").textContent=titles[tab][0]; $("#pageSub").textContent=titles[tab][1];
@@ -853,7 +1194,7 @@ function render(){
 
   if (tab==="browse"){
     const list=sortList(applyAll(ITEMS));
-    m.innerHTML=`<div class="meta"><span>${list.length} item${list.length===1?"":"s"}</span>${sortSelect()}</div>`+
+    m.innerHTML=hideNote()+`<div class="meta"><span>${list.length} ${cl?esc(cl.l.toLowerCase())+" ":""}item${list.length===1?"":"s"}</span>${sortSelect()}</div>`+
       (list.length?`<div class="list">${list.map(card).join("")}</div>`:`<div class="empty"><div class="big">🥗</div>No items match.<br>Try loosening your filters.</div>`);
   }
 
@@ -867,38 +1208,42 @@ function render(){
     const aq = atQuery.trim().toLowerCase();
     const itemMatch = i => i.name.toLowerCase().includes(aq);
     if (!atChain){
-      const chains = Object.entries(CHAINS).filter(([k,v])=>!aq || v.name.toLowerCase().includes(aq) || ITEMS.some(i=>i.chain===k && itemMatch(i)));
-      const hits = aq.length>=2 ? sortList(ITEMS.filter(itemMatch),"health").slice(0,30) : [];
-      m.innerHTML=`<p class="section-p" style="margin-top:8px">${aq?`${chains.length} place${chains.length===1?"":"s"} match “${esc(atQuery.trim())}”.`:"Tap where you're ordering from to see the best picks."}</p>
+      const pool = ITEMS.filter(i=>visible(i) && craves(i) && !/_[wzs]$/.test(i.id));
+      const chains = Object.entries(CHAINS).filter(([k,v])=>(!cl || pool.some(i=>i.chain===k)) && (!aq || v.name.toLowerCase().includes(aq) || pool.some(i=>i.chain===k && itemMatch(i))));
+      const hits = aq.length>=2 ? sortList(pool.filter(itemMatch),"health").slice(0,30) : cl ? sortList(pool,"health").slice(0,12) : [];
+      m.innerHTML=hideNote()+`<p class="section-p" style="margin-top:8px">${aq?`${chains.length} place${chains.length===1?"":"s"} match “${esc(atQuery.trim())}”.`:cl?`${chains.length} place${chains.length===1?"":"s"} with ${esc(cl.l.toLowerCase())}. Tap one for its best picks.`:"Tap where you're ordering from to see the best picks."}</p>
         ${chains.length?`<div class="grid">${chains.map(([k,v])=>`<button class="tile" data-at="${k}"><span class="badge" style="background:${v.color}">${v.icon}</span>${v.name}</button>`).join("")}</div>`:`<div class="empty"><div class="big">🔍</div>No chains or items match.</div>`}
-        ${hits.length?`<div class="section-h">Matching menu items</div><div class="list">${hits.map(card).join("")}</div>`:""}`;
+        ${hits.length?`<div class="section-h">${aq?"Matching menu items":`Healthiest ${esc(cl.l.toLowerCase())} picks anywhere`}</div><div class="list">${hits.map(card).join("")}</div>`:""}`;
     } else if (aq){
       const ch=CHAINS[atChain];
-      const hits=sortList(ITEMS.filter(i=>i.chain===atChain && itemMatch(i)),"health");
+      const hits=sortList(ITEMS.filter(i=>i.chain===atChain && visible(i) && itemMatch(i)),"health");
       m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${hits.length} result${hits.length===1?"":"s"} for “${esc(atQuery.trim())}”</div></div><button class="link-btn" data-at="">Change</button></div>
         ${hits.length?`<div class="list" style="margin-top:12px">${hits.map(card).join("")}</div>`:`<div class="empty"><div class="big">🔍</div>Nothing on the ${esc(ch.name)} menu matches.<br>Clear the search to see the best picks.</div>`}`;
     } else {
       const ch=CHAINS[atChain], b=bestFor(atChain);
+      const crHere = cl ? ITEMS.filter(i=>i.chain===atChain && visible(i) && craves(i)) : [];
+      const craveNote = cl ? (crHere.length ? `<p class="hide-note">Showing ${esc(cl.l.toLowerCase())} picks first.</p>` : `<p class="hide-note">No ${esc(cl.l.toLowerCase())} on the ${esc(ch.name)} menu — showing the best of everything.</p>`) : "";
       if (b.drinks){
         const picks=b.drinks.filter(i=>!/_w$/.test(i.id)).slice(0,5);
-        m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${SRC_LABEL[SOURCES[atChain][0]]} figures</div></div><button class="link-btn" data-at="">Change</button></div>
+        m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${SRC_LABEL[SOURCES[atChain][0]]} figures</div></div><button class="link-btn" data-at="">Change</button></div>${craveNote}${hideNote()}
           <div class="section-h">Best drinks</div>
           <p class="section-p">Ranked by health rating, then protein per calorie. Tap one to customise it or add it to your meal.</p>
           <div class="list">${picks.map(card).join("")}</div>
           <div class="sheet-actions"><button class="btn light" data-fullmenu="${atChain}">See full ${esc(ch.name)} menu</button></div>`;
         updateBadges(); return;
       }
+      if(!b.mains.length){ m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b></div><button class="link-btn" data-at="">Change</button></div>${hideNote()}<div class="empty"><div class="big">🚫</div>Everything here is hidden by your dislikes.</div>`; updateBadges(); return; }
       const showSide = b.side && b.side.rating!=="r";
       const comboItems=[b.mains[0], showSide?b.side:null, b.drink].filter(Boolean);
-      m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${SRC_LABEL[SOURCES[atChain][0]]} figures</div></div><button class="link-btn" data-at="">Change</button></div>
+      m.innerHTML=`<div class="at-head"><span class="badge" style="background:${ch.color}">${ch.icon}</span><div class="grow"><b>${ch.name}</b><div class="chain">${SRC_LABEL[SOURCES[atChain][0]]} figures</div></div><button class="link-btn" data-at="">Change</button></div>${craveNote}${hideNote()}
         <div class="section-h">Best combo here</div>
         <p class="section-p">${comboItems.map(i=>esc(i.name)).join(" + ")}</p>
         ${summaryCard(totals(comboItems))}
         <div class="sheet-actions" style="margin-top:12px"><button class="btn green" data-addcombo="${comboItems.map(i=>i.id).join(",")}">Add combo to meal</button></div>
-        <div class="section-h">Best mains</div>
+        <div class="section-h">${cl&&crHere.some(i=>i.type!=="Drink")?"Best "+esc(cl.l.toLowerCase())+" picks":"Best mains"}</div>
         <div class="list">${b.mains.map(card).join("")}</div>
         ${b.side?`<div class="section-h">Best side</div><div class="list">${card(b.side)}</div>`:""}
-        ${b.drink?`<div class="section-h">Best drink</div><div class="list">${card(b.drink)}</div>`:""}
+        ${b.drink?`<div class="section-h">${cl&&crHere.some(i=>i.type==="Drink")?"Best "+esc(cl.l.toLowerCase()):"Best drink"}</div><div class="list">${card(b.drink)}</div>`:""}
         <div class="sheet-actions"><button class="btn light" data-fullmenu="${atChain}">See full ${esc(ch.name)} menu</button></div>`;
     }
   }
@@ -951,7 +1296,7 @@ function ring(val,max,color){
 function renderDetail(){
   const base=BY_ID[detail.id], tw=[...detail.tw], it=applyTweaks(base,tw), ch=CHAINS[it.chain];
   const pc=it.p*4, cc=it.c*4, fc=it.f*9, t=(pc+cc+fc)||1;
-  const swap = sortList(ITEMS.filter(i=>i.chain===it.chain && i.type===it.type && i.id!==it.id && ORDER[i.rating]<ORDER[it.rating]),"ppc")[0];
+  const swap = sortList(ITEMS.filter(i=>i.chain===it.chain && i.type===it.type && i.id!==it.id && visible(i) && ORDER[i.rating]<ORDER[it.rating]),"ppc")[0];
   const delta = it.cal-base.cal;
   $("#detailSheet").innerHTML = `<div class="grab"></div>
     <div class="d-head">
@@ -975,7 +1320,8 @@ function renderDetail(){
     ${base.tw.length?`<div class="why"><h3>Customise</h3>${base.tw.map(k=>{const d=TWEAKS[k].fn?TWEAKS[k].fn(base):TWEAKS[k].d;return `<button class="tw-chip ${detail.tw.has(k)?"on":""}" data-tw="${k}">${detail.tw.has(k)?"✓ ":""}${TWEAKS[k].l} <span class="delta">${d[0]>0?"+":""}${d[0]}</span></button>`;}).join("")}<div class="delta" style="margin-top:4px">Tweak values are estimates.</div></div>`:""}
     <div class="why"><h3>Make it healthier</h3>${esc(it.tip)}</div>
     ${swap?`<div class="why"><h3>Healthier swap at ${esc(ch.name)}</h3><button data-open="${swap.id}" style="text-align:left;width:100%"><b>${esc(swap.name)}</b> — ${swap.cal} cal, ${fmt(swap.p)} g protein <span class="pill ${swap.rating}">${RATING_LABEL[swap.rating]}</span></button></div>`:""}
-    <div class="sheet-actions"><button class="btn light" data-close>Close</button><button class="btn green" id="addMeal">Add to meal</button></div>`;
+    <div class="sheet-actions"><button class="btn light" data-close>Close</button><button class="btn green" id="addMeal">Add to meal</button></div>
+    <div style="text-align:center;margin-top:10px"><button class="link-btn" data-hideitem="${it.id}">${hiddenIds.has(it.id)?"Show this item again":"🚫 Hide this item — I don't like it"}</button></div>`;
 }
 function openDetail(id, tw=[]){ detail={id, tw:new Set(tw)}; renderDetail(); openSheet("#detailSheet"); }
 
@@ -1012,6 +1358,11 @@ document.addEventListener("click",e=>{
   const ac=e.target.closest("[data-addcombo]"); if(ac){ ac.dataset.addcombo.split(",").forEach(id=>meal.push({id,tw:[]})); saveMeal(); toast("Combo added to meal ✓"); return; }
   const at=e.target.closest("[data-at]"); if(at){ atChain=at.dataset.at||null; atQuery=""; $("#q").value=""; store.set("tm_at",atChain); render(); window.scrollTo({top:0}); return; }
   const fm=e.target.closest("[data-fullmenu]"); if(fm){ chain=fm.dataset.fullmenu; renderChips(); setTab("browse"); return; }
+  const cv=e.target.closest("[data-crave]"); if(cv){ crave=cv.dataset.crave; store.set("tm_crave",crave); render(); return; }
+  if(e.target.closest("[data-dislikes]")){ renderDislikeSheet(); openSheet("#dislikeSheet"); return; }
+  const dl=e.target.closest("[data-dl]"); if(dl){ const k=dl.dataset.dl; dislikes.has(k)?dislikes.delete(k):dislikes.add(k); saveDislikes(); renderDislikeSheet(); return; }
+  const uh=e.target.closest("[data-unhide]"); if(uh){ hiddenIds.delete(uh.dataset.unhide); saveDislikes(); renderDislikeSheet(); return; }
+  const hi=e.target.closest("[data-hideitem]"); if(hi){ const id=hi.dataset.hideitem; if(hiddenIds.has(id)){hiddenIds.delete(id); toast("Item shown again");} else {hiddenIds.add(id); toast("Hidden — undo in “Hide what I don't like”");} saveDislikes(); closeSheets(); return; }
   const ch=e.target.closest("[data-chain]"); if(ch){ chain=ch.dataset.chain; renderChips(); render(); return; }
   const nb=e.target.closest(".nav-btn"); if(nb){ setTab(nb.dataset.tab); return; }
   const fs=e.target.closest("[data-f]"); if(fs){ draft[fs.dataset.f]=fs.dataset.v; renderFilterSheet(); return; }
@@ -1023,6 +1374,9 @@ $("#filterBtn").addEventListener("click",()=>{ draft={...filters}; renderFilterS
 $("#fCal").addEventListener("input",e=>{ draft.maxCal=+e.target.value; renderFilterSheet(); });
 $("#fPro").addEventListener("input",e=>{ draft.minPro=+e.target.value; renderFilterSheet(); });
 $("#fNa").addEventListener("input",e=>{ draft.maxNa=+e.target.value; renderFilterSheet(); });
+$("#dlCustom").addEventListener("input",e=>{ customWords=e.target.value; saveDislikes(); renderDislikeSheet(); });
+$("#dlReset").addEventListener("click",()=>{ dislikes.clear(); customWords=""; hiddenIds.clear(); saveDislikes(); renderDislikeSheet(); });
+$("#dlDone").addEventListener("click",closeSheets);
 $("#resetF").addEventListener("click",()=>{ draft={...DEFAULT_F}; renderFilterSheet(); });
 $("#applyF").addEventListener("click",()=>{ filters={...draft}; store.set("tm_filters",filters); closeSheets(); });
 $("#q").addEventListener("input",e=>{ if(tab==="at") atQuery=e.target.value; else query=e.target.value; render(); });
